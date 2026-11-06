@@ -52,7 +52,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 
 ## In corso
 - Issue #48, branch `claude/48-github-config`: ADR 0012 (repository pubblico, configurazione GitHub) e ADR 0013 (frontend separato, backend monolitico), template di PR e issue, `CODEOWNERS`, `SECURITY.md`, workflow `Dependency review`; `CLAUDE.md` aggiornato. CI: vedi i check della PR.
-- Dopo: repository template e script di configurazione per i prossimi progetti (piano approvato da Alessio); poi ADR delle metriche.
+- Per i prossimi progetti (ADR 0012): repository template privato `NoFortunateSon/template-spring-app` creato (CI verde, run 42301699357; lo script `scripts/rename-project.sh` provato su una copia: compila e passa i test) e script `platform-infra/scripts/configure-github-repo.sh` (PR platform-infra #6, CI verde; provato su questo repository: idempotente). Sui repository privati del piano Free l'auto-merge resta spento.
+- Dopo: ADR delle metriche.
 
 ## Decisioni in attesa di Alessio
 - Soglie di qualità proposte (ADR 0011, C1): Quality Gate di Sonar bloccante sulle PR; JaCoCo almeno 90% righe e 85% rami; PIT almeno 90% delle mutazioni scoperte.
