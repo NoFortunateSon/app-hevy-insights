@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.hevyclient;
+package io.github.nofortunateson.hevyinsights.data.hevy;
 
 import java.time.Duration;
 

@@ -1,6 +1,6 @@
 # Linee guida di codice (app-hevy-insights)
 
-Regole di progettazione per Claude Code e per chi scrive codice in questo repo. Sono note mie, scritte con parole mie, tratte dai libri di Alessio in OneDrive (`PROGRAMMAZIONE\LIBRI`). Ultimo aggiornamento: 2026-11-06 (regola 18 da ADR 0006).
+Regole di progettazione per Claude Code e per chi scrive codice in questo repo. Sono note mie, scritte con parole mie, tratte dai libri di Alessio in OneDrive (`PROGRAMMAZIONE\LIBRI`). Ultimo aggiornamento: 2026-11-06 (regola 18 da ADR 0006; regole 2 e 3 adeguate all'ADR 0007).
 
 **Come si usano.** Le regole valgono per ogni PR. Se una regola si scontra con un'altra o con un ADR, non scegliere tu: scrivi un ADR in stato `Proposta`. Una regola `[Opinione]` è una mia sintesi, non un'affermazione del libro.
 
@@ -11,8 +11,8 @@ Regole di progettazione per Claude Code e per chi scrive codice in questo repo. 
 | # | Regola | Perché | Quando NON applicarla | Fonte | Stato |
 |---|---|---|---|---|---|
 | 1 | **Moduli profondi.** Interfaccia piccola, molto lavoro dietro. Un'interfaccia semplice vale più di un'implementazione semplice. | Meno cose da sapere per usare il modulo; i cambi restano dentro. | Se il modulo non nasconde nulla (solo inoltra), non crearlo. | Ousterhout, principi 4-6 | Fatto |
-| 2 | **Una decisione di design vive in un solo modulo.** La forma dell'API Hevy la conosce solo `hevyclient`; `sync` e `metrics` usano tipi nostri. | Se la stessa decisione compare in due moduli, ogni cambio li tocca entrambi. | Nessuna: è già una regola di `CLAUDE.md`. | Ousterhout, bandiera "Information Leakage" | Fatto |
-| 3 | **Niente metodi o livelli che inoltrano soltanto.** Ogni livello deve offrire un'astrazione diversa da quello sotto. | Un livello identico al vicino aggiunge codice senza togliere complessità. | Un decorator che aggiunge comportamento vero. | Ousterhout, principio 9, bandiera "Pass-Through Method" | Fatto |
+| 2 | **Una decisione di design vive in un solo modulo.** La forma dell'API Hevy la conosce solo `data.hevy`; `business.sync` e `business.metrics` usano tipi nostri (ADR 0007). | Se la stessa decisione compare in due moduli, ogni cambio li tocca entrambi. | Nessuna: è già una regola di `CLAUDE.md`. | Ousterhout, bandiera "Information Leakage" | Fatto |
+| 3 | **Niente metodi o livelli che inoltrano soltanto.** Ogni livello deve offrire un'astrazione diversa da quello sotto. | Un livello identico al vicino aggiunge codice senza togliere complessità. | Un decorator che aggiunge comportamento vero. Un servizio di `business` che inoltra a `data` è accettato come costo dei tre livelli (ADR 0007). | Ousterhout, principio 9, bandiera "Pass-Through Method" | Fatto |
 | 4 | **Separare codice generico da codice specifico.** La logica generica non conosce i casi particolari di chi la usa. | Il generico resta riusabile e più semplice da capire. | Quando il caso particolare è l'unico uso reale: non anticipare. | Ousterhout, principio 8 | Fatto |
 | 5 | **Niente duplicazione.** Se la stessa struttura compare in due punti, unificala. | Chi legge deve confrontare le copie; chi modifica deve trovarle tutte. | Non estrarre una libreria condivisa prima di due app che la usano (già in `CLAUDE.md`). | Fowler cap. 3 "Duplicated Code"; Ousterhout "Repetition" | Fatto |
 | 6 | **Nomi precisi, scelti per intenzione.** Se non trovi un nome, spesso il design è sbagliato: fermati e semplifica. | Un buon nome evita di aprire il corpo della funzione. | Nomi del dominio Hevy: tienili come li chiama l'API dentro `hevyclient`. | Fowler "Mysterious Name"; Ousterhout "Vague Name", "Hard to Pick Name" | Fatto |
