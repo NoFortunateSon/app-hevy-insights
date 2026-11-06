@@ -1,6 +1,6 @@
 # 0010 - Ambiente di esecuzione gratuito, attivo a PC spento
 
-Stato: Proposta
+Stato: Accettata
 Data: 2026-11-06
 
 ## Contesto
@@ -30,10 +30,9 @@ Fatti dalle pagine ufficiali, lette il 2026-11-06:
 Raccomandazione di Claude: **2 adesso**, perché copre l'unica cosa che oggi deve girare a PC spento (la sync) senza server da curare e senza carta. Quando arriveranno le API REST si rivaluta: Neon resta il database e si aggiunge solo dove far girare l'API (per esempio l'opzione 1).
 
 ## Decisione
-(da compilare da Alessio)
+Deciso da Alessio il 2026-11-06: **opzione 2**, GitHub Actions pianificato + Postgres su Neon (piano gratuito). Le API REST, quando arriveranno, avranno un ADR loro su dove girare.
 
 ## Conseguenze
-Con l'opzione 2:
 - Nuovo workflow GitHub Actions pianificato ogni 6 ore (a un minuto non tondo, come chiede Hevy), più l'avvio manuale.
 - Il codice ottiene una modalità "una sync e poi esci" (proprietà di configurazione), oltre alla sync periodica che resta per l'uso locale.
 - Database: un progetto Neon gratuito; l'URL e le credenziali diventano segreti del repository GitHub, come `HEVY_API_KEY`. Le migrazioni Flyway si applicano da sole al primo avvio.
