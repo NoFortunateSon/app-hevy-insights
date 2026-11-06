@@ -10,9 +10,9 @@ import java.util.Objects;
  * @param updatedAt last update time reported by Hevy
  * @param rawJson   the original workout JSON object, kept so callers can store it unchanged
  */
-public record HevyWorkout(String id, Instant updatedAt, String rawJson) {
+public record HevyWorkoutDto(String id, Instant updatedAt, String rawJson) {
 
-    public HevyWorkout {
+    public HevyWorkoutDto {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(updatedAt, "updatedAt");
         Objects.requireNonNull(rawJson, "rawJson");

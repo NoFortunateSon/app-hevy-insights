@@ -12,11 +12,11 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import io.github.nofortunateson.hevyinsights.config.HevyApiProperties;
-import io.github.nofortunateson.hevyinsights.config.HevyClientConfiguration;
+import io.github.nofortunateson.hevyinsights.config.HevyApiConfiguration;
 import io.github.nofortunateson.hevyinsights.exception.HevyApiException;
-import io.github.nofortunateson.hevyinsights.exception.HevyRateLimitedException;
-import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkout;
-import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutEvent;
+import io.github.nofortunateson.hevyinsights.exception.HevyRateLimitExceededException;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutDto;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutEventDto;
 import io.github.nofortunateson.hevyinsights.utils.Constants;
 import java.net.URI;
 import java.time.Duration;
@@ -37,13 +37,13 @@ import org.springframework.web.client.RestClient;
  * Contract tests against recorded-shape responses (invented data, schema from the Hevy docs).
  * No real Hevy call.
  */
-class HevyClientContractTests {
+class HevyWorkoutRepositoryContractTests {
 
     private static final String BASE = "https://hevy.test";
     // Not a real key: an all-zero UUID, the format Hevy documents for the header.
     private static final String FAKE_KEY = "00000000-0000-0000-0000-000000000000";
 
-    // From the Hevy spec, not from HevyClient: the contract is what Hevy documents.
+    // From the Hevy spec, not from HevyWorkoutRepository: the contract is what Hevy documents.
     private static final int HEVY_MAX_PAGE_SIZE = 10;
     private static final Instant SINCE = Instant.parse("2026-10-01T00:00:00Z");
 
@@ -51,11 +51,11 @@ class HevyClientContractTests {
 
     private MockRestServiceServer server;
 
-    private HevyClient client(String key, int maxAttempts) {
-        RestClient.Builder builder = HevyClientConfiguration.restClientBuilder(
+    private HevyWorkoutRepository repository(String key, int maxAttempts) {
+        RestClient.Builder builder = HevyApiConfiguration.restClientBuilder(
                 new HevyApiProperties(URI.create(BASE), key, maxAttempts));
         server = MockRestServiceServer.bindTo(builder).build();
-        return new HevyClient(builder.build(), sleeps::add, maxAttempts);
+        return new HevyWorkoutRepository(builder.build(), sleeps::add, maxAttempts);
     }
 
     private static String workoutsPage(int page) {
@@ -72,7 +72,7 @@ class HevyClientContractTests {
 
     @Test
     void fetchAllWorkoutsWalksEveryPageWithMaxPageSizeAndApiKey() {
-        HevyClient client = client(FAKE_KEY, 5);
+        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
         server.expect(requestTo(workoutsPage(1)))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
@@ -82,10 +82,10 @@ class HevyClientContractTests {
                 .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
                 .andRespond(withSuccess(fixture("workouts-page-2.json"), MediaType.APPLICATION_JSON));
 
-        List<HevyWorkout> workouts = client.fetchAllWorkouts();
+        List<HevyWorkoutDto> workouts = repository.fetchAllWorkouts();
 
         server.verify();
-        assertThat(workouts).extracting(HevyWorkout::id).containsExactly("w-0001", "w-0002");
+        assertThat(workouts).extracting(HevyWorkoutDto::id).containsExactly("w-0001", "w-0002");
         assertThat(workouts.getFirst().updatedAt()).isEqualTo(Instant.parse("2026-10-01T18:10:00Z"));
         assertThat(workouts.getFirst().rawJson())
                 .contains("\"exercise_template_id\":\"tmpl-bench\"")
@@ -95,38 +95,38 @@ class HevyClientContractTests {
 
     @Test
     void fetchAllWorkoutsStopsAfterOneRequestWhenThereAreNoWorkouts() {
-        HevyClient client = client(FAKE_KEY, 5);
+        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
         server.expect(requestTo(workoutsPage(1)))
                 .andRespond(withSuccess(fixture("workouts-empty.json"), MediaType.APPLICATION_JSON));
 
-        assertThat(client.fetchAllWorkouts()).isEmpty();
+        assertThat(repository.fetchAllWorkouts()).isEmpty();
         server.verify();
     }
 
     @Test
     void fetchWorkoutEventsSinceMapsUpdatesAndDeletions() {
-        HevyClient client = client(FAKE_KEY, 5);
+        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
         server.expect(requestTo(eventsFirstPage(SINCE)))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
                 .andRespond(withSuccess(fixture("workout-events-page-1.json"), MediaType.APPLICATION_JSON));
 
-        List<HevyWorkoutEvent> events = client.fetchWorkoutEventsSince(SINCE);
+        List<HevyWorkoutEventDto> events = repository.fetchWorkoutEventsSince(SINCE);
 
         server.verify();
         assertThat(events).hasSize(3);
-        assertThat(events.get(0)).isInstanceOfSatisfying(HevyWorkoutEvent.Updated.class, updated -> {
+        assertThat(events.get(0)).isInstanceOfSatisfying(HevyWorkoutEventDto.Updated.class, updated -> {
             assertThat(updated.workout().id()).isEqualTo("w-0002");
             assertThat(updated.workout().updatedAt()).isEqualTo(Instant.parse("2026-10-04T09:00:00Z"));
         });
         assertThat(events.get(1)).isEqualTo(
-                new HevyWorkoutEvent.Deleted("w-0001", Instant.parse("2026-10-02T12:00:00Z")));
-        assertThat(events.get(2)).isEqualTo(new HevyWorkoutEvent.Deleted("w-0000", null));
+                new HevyWorkoutEventDto.Deleted("w-0001", Instant.parse("2026-10-02T12:00:00Z")));
+        assertThat(events.get(2)).isEqualTo(new HevyWorkoutEventDto.Deleted("w-0000", null));
     }
 
     @Test
     void rateLimitHonoursRetryAfterSecondsThenSucceeds() {
-        HevyClient client = client(FAKE_KEY, 5);
+        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
         HttpHeaders retryAfter = new HttpHeaders();
         retryAfter.set(HttpHeaders.RETRY_AFTER, "7");
         server.expect(requestTo(workoutsPage(1)))
@@ -134,19 +134,19 @@ class HevyClientContractTests {
         server.expect(requestTo(workoutsPage(1)))
                 .andRespond(withSuccess(fixture("workouts-empty.json"), MediaType.APPLICATION_JSON));
 
-        assertThat(client.fetchAllWorkouts()).isEmpty();
+        assertThat(repository.fetchAllWorkouts()).isEmpty();
         server.verify();
         assertThat(sleeps).containsExactly(Duration.ofSeconds(7));
     }
 
     @Test
     void rateLimitWithoutRetryAfterBacksOffExponentiallyAndGivesUp() {
-        HevyClient client = client(FAKE_KEY, 4);
+        HevyWorkoutRepository repository = repository(FAKE_KEY, 4);
         server.expect(times(4), requestTo(workoutsPage(1)))
                 .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
 
-        assertThatThrownBy(client::fetchAllWorkouts)
-                .isInstanceOf(HevyRateLimitedException.class)
+        assertThatThrownBy(repository::fetchAllWorkouts)
+                .isInstanceOf(HevyRateLimitExceededException.class)
                 .extracting(e -> ((HevyApiException) e).statusCode()).isEqualTo(OptionalInt.of(429));
         server.verify();
         assertThat(sleeps).containsExactly(
@@ -155,11 +155,11 @@ class HevyClientContractTests {
 
     @Test
     void errorStatusFailsWithoutLeakingTheKey() {
-        HevyClient client = client(FAKE_KEY, 5);
+        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
         server.expect(requestTo(workoutsPage(1)))
                 .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
 
-        assertThatThrownBy(client::fetchAllWorkouts)
+        assertThatThrownBy(repository::fetchAllWorkouts)
                 .isInstanceOf(HevyApiException.class)
                 .hasMessageContaining("401")
                 .hasMessageNotContaining(FAKE_KEY)
@@ -169,10 +169,10 @@ class HevyClientContractTests {
 
     @Test
     void missingKeyFailsBeforeAnyRequest() {
-        HevyClient client = client("  ", 5);
+        HevyWorkoutRepository repository = repository("  ", 5);
         server.expect(never(), anything());
 
-        assertThatThrownBy(client::fetchAllWorkouts)
+        assertThatThrownBy(repository::fetchAllWorkouts)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Hevy API key missing: set HEVY_API_KEY");
         server.verify();
@@ -180,12 +180,12 @@ class HevyClientContractTests {
 
     @Test
     void unknownEventTypeIsRejected() {
-        HevyClient client = client(FAKE_KEY, 5);
+        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
         server.expect(requestTo(eventsFirstPage(Instant.EPOCH)))
                 .andRespond(withSuccess("{\"page\":1,\"page_count\":1,\"events\":[{\"type\":\"merged\"}]}",
                         MediaType.APPLICATION_JSON));
 
-        assertThatThrownBy(() -> client.fetchWorkoutEventsSince(Instant.EPOCH))
+        assertThatThrownBy(() -> repository.fetchWorkoutEventsSince(Instant.EPOCH))
                 .isInstanceOf(HevyApiException.class)
                 .hasMessageContaining("merged")
                 .extracting(e -> ((HevyApiException) e).statusCode()).isEqualTo(OptionalInt.empty());
@@ -200,8 +200,8 @@ class HevyClientContractTests {
 
     @Test
     void retryAfterIsCappedAndMalformedValuesFallBackToBackoff() {
-        assertThat(HevyClient.retryDelay("3600", 1)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
-        assertThat(HevyClient.retryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 2)).isEqualTo(Duration.ofSeconds(2));
-        assertThat(HevyClient.retryDelay(null, 30)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
+        assertThat(HevyWorkoutRepository.retryDelay("3600", 1)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
+        assertThat(HevyWorkoutRepository.retryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 2)).isEqualTo(Duration.ofSeconds(2));
+        assertThat(HevyWorkoutRepository.retryDelay(null, 30)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
     }
 }

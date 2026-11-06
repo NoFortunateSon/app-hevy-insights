@@ -4,9 +4,9 @@ import java.time.Duration;
 
 /** Waits between retries. A seam so tests do not really sleep. */
 @FunctionalInterface
-public interface Sleeper {
+public interface RetrySleeper {
 
-    Sleeper REAL = Thread::sleep;
+    RetrySleeper REAL = Thread::sleep;
 
     void sleep(Duration duration) throws InterruptedException;
 }

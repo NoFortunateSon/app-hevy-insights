@@ -7,10 +7,10 @@ import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_WORKOUT
 import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_WORKOUT_EVENTS_PATH;
 
 import io.github.nofortunateson.hevyinsights.exception.HevyApiException;
-import io.github.nofortunateson.hevyinsights.exception.HevyRateLimitedException;
-import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkout;
-import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutEvent;
-import io.github.nofortunateson.hevyinsights.utils.Sleeper;
+import io.github.nofortunateson.hevyinsights.exception.HevyRateLimitExceededException;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutDto;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutEventDto;
+import io.github.nofortunateson.hevyinsights.utils.RetrySleeper;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -35,32 +35,32 @@ import tools.jackson.databind.json.JsonMapper;
  * {@code Retry-After} in seconds when present, otherwise with exponential backoff. Hevy does not
  * document its rate limits, so these choices are defensive guesses.
  */
-public class HevyClient {
+public class HevyWorkoutRepository {
 
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private final RestClient restClient;
-    private final Sleeper sleeper;
+    private final RetrySleeper sleeper;
     private final int maxRateLimitAttempts;
 
-    public HevyClient(RestClient restClient, Sleeper sleeper, int maxRateLimitAttempts) {
+    public HevyWorkoutRepository(RestClient restClient, RetrySleeper sleeper, int maxRateLimitAttempts) {
         this.restClient = restClient;
         this.sleeper = sleeper;
         this.maxRateLimitAttempts = maxRateLimitAttempts;
     }
 
     /** Every workout of the user, all pages. */
-    public List<HevyWorkout> fetchAllWorkouts() {
-        return fetchAllPages(HEVY_WORKOUTS_PATH, Map.of(), "workouts", HevyClient::toWorkout);
+    public List<HevyWorkoutDto> fetchAllWorkouts() {
+        return fetchAllPages(HEVY_WORKOUTS_PATH, Map.of(), "workouts", HevyWorkoutRepository::toWorkout);
     }
 
     /**
      * Workout updates and deletions since the given time, all pages, in the order Hevy returns
      * them (documented as newest first).
      */
-    public List<HevyWorkoutEvent> fetchWorkoutEventsSince(Instant since) {
+    public List<HevyWorkoutEventDto> fetchWorkoutEventsSince(Instant since) {
         return fetchAllPages(HEVY_WORKOUT_EVENTS_PATH, Map.of("since", since.toString()), "events",
-                HevyClient::toEvent);
+                HevyWorkoutRepository::toEvent);
     }
 
     private <T> List<T> fetchAllPages(String path, Map<String, String> query, String itemsField,
@@ -87,7 +87,7 @@ public class HevyClient {
                 return parseSuccessfulBody(path, response);
             }
             if (attempt >= maxRateLimitAttempts) {
-                throw new HevyRateLimitedException(
+                throw new HevyRateLimitExceededException(
                         "Hevy rate limit on " + path + " after " + attempt + " attempts");
             }
             pause(retryDelay(response.retryAfter(), attempt));
@@ -160,24 +160,24 @@ public class HevyClient {
         }
     }
 
-    private static HevyWorkout toWorkout(JsonNode node) {
-        return new HevyWorkout(requiredText(node, "id"),
+    private static HevyWorkoutDto toWorkout(JsonNode node) {
+        return new HevyWorkoutDto(requiredText(node, "id"),
                 parseInstant(requiredText(node, "updated_at")), node.toString());
     }
 
-    private static HevyWorkoutEvent toEvent(JsonNode node) {
+    private static HevyWorkoutEventDto toEvent(JsonNode node) {
         String type = requiredText(node, "type");
         return switch (type) {
-            case "updated" -> new HevyWorkoutEvent.Updated(toWorkout(required(node, "workout")));
+            case "updated" -> new HevyWorkoutEventDto.Updated(toWorkout(required(node, "workout")));
             case "deleted" -> toDeletedEvent(node);
             default -> throw new HevyApiException("Unknown Hevy workout event type: " + type);
         };
     }
 
     /** {@code deleted_at} is optional in the Hevy spec. */
-    private static HevyWorkoutEvent.Deleted toDeletedEvent(JsonNode node) {
+    private static HevyWorkoutEventDto.Deleted toDeletedEvent(JsonNode node) {
         JsonNode deletedAt = node.path("deleted_at");
-        return new HevyWorkoutEvent.Deleted(requiredText(node, "id"),
+        return new HevyWorkoutEventDto.Deleted(requiredText(node, "id"),
                 deletedAt.isString() ? parseInstant(deletedAt.asString()) : null);
     }
 
