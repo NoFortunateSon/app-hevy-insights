@@ -52,3 +52,4 @@ In `docs/adr/`, in italiano. La numerazione parte da 0003 perché 0001 e 0002 so
 | [0006](docs/adr/0006-dimensione-delle-funzioni.md) | Dimensione delle funzioni | Accettata |
 | [0007](docs/adr/0007-struttura-dei-package.md) | Struttura dei package: controller, service, repository | Accettata |
 | [0008](docs/adr/0008-design-della-sync.md) | Design della sync con Hevy | Proposta |
+| [0009](docs/adr/0009-tecnologia-del-repository.md) | Tecnologia del repository: JPA | Accettata |
