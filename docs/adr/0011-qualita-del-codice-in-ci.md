@@ -1,6 +1,6 @@
 # 0011 - Qualità del codice in CI: SonarQube e strumenti che mettono alla prova il codice
 
-Stato: Proposta
+Stato: Accettata
 Data: 2026-11-06
 
 ## Contesto
@@ -45,10 +45,9 @@ Fatti verificati il 2026-11-06 su pagine ufficiali:
 Raccomandazione di Claude: **A1, B1, C1**. SonarQube Cloud è l'unico modo gratuito di avere SonarQube con lo storico senza un server; PIT è lo strumento che più "mette alla prova" il codice; i plugin statici in più duplicherebbero SonarQube. Le soglie si fissano sui numeri veri.
 
 ## Decisione
-(da compilare da Alessio)
+Deciso da Alessio il 2026-11-06: **le raccomandazioni**. A1 SonarQube Cloud (piano gratuito), B1 JaCoCo + PIT, C1 nessuna soglia bloccante finché non si misura il punto di partenza.
 
 ## Conseguenze
-Con A1, B1, C1:
 - `pom.xml`: plugin JaCoCo (rapporto XML in `verify`) e PIT (in un profilo, perché il mutation testing è lento e non serve in ogni build locale); versioni fissate a quelle verificate sopra.
 - `ci.yml`: un passo che, se `SONAR_TOKEN` esiste, lancia l'analisi SonarQube dopo `mvn verify`; un passo per PIT con il rapporto salvato come artefatto del giro. Le PR di Dependabot non ricevono i secrets: per loro l'analisi Sonar si salta.
 - Alessio: crea l'organizzazione e il progetto su SonarQube Cloud importando il repository GitHub, spegne l'analisi automatica, crea un token e lo salva come secret `SONAR_TOKEN`. Le chiavi `sonar.organization` e `sonar.projectKey` vanno nel `pom.xml` (non sono segrete).

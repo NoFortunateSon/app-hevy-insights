@@ -46,11 +46,10 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #44, branch `claude/44-adr-code-quality`: ADR 0011 `Proposta` (SonarQube e strumenti di test in CI); conferma di Alessio sulle classi `public` di `controller/hevy` scritta nell'ADR 0007. Solo documentazione.
+- Issue #44, branch `claude/44-adr-code-quality`: ADR 0011 **accettata** (SonarQube Cloud gratuito, JaCoCo + PIT, soglie dopo la prima misura); conferma di Alessio sulle classi `public` di `controller/hevy` scritta nell'ADR 0007. Solo documentazione.
 - Dopo: ADR delle metriche.
 
 ## Decisioni in attesa di Alessio
-- **ADR 0011 `Proposta` (issue #44): qualità del codice in CI.** A: dove gira SonarQube (raccomandato SonarQube Cloud gratuito, privato fino a 50k righe, Java 25 supportato); B: quali strumenti (raccomandati JaCoCo + PIT mutation testing); C: soglie (raccomandato: prima si misura, poi si fissano). Verificato sulle pagine ufficiali il 2026-11-06; il supporto di PIT a Java 25 non è dichiarato, va provato.
 - La sync parte da `HevySyncController` (classe nuova) invece che da `HevyApiController`, per la regola 19: da confermare, oppure si accorpano (ADR 0008, sezione Implementazione).
 
 ## Per il coordinatore
