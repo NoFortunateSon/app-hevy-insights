@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR #23). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR #28). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -39,6 +39,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Issue #24, branch `claude/24-rename-classes` (parte dal branch della #23): classi rinominate per ruolo: `HevyClient` → `HevyApiController` (spostato da `repository` a `controller`: il repository è solo database; la sync partirà dal controller, ADR 0007), `HevyClientConfiguration` → `HevyApiConfiguration`, `HevyWorkout` → `HevyWorkoutDto`, `HevyWorkoutEvent` → `HevyWorkoutEventDto`, `HevyRateLimitedException` → `HevyRateLimitExceededException`, `Sleeper` → `RetrySleeper`. Criterio model/DTO scritto in ADR 0007 e `CLAUDE.md`. Nessun cambio di comportamento.
 
 ## Decisioni in attesa di Alessio
+- Aggiunta all'ADR 0007 e regola 19 "una classe, un compito" (PR #28): vale con il merge. Poi issue #27: Claude Code divide `HevyApiController`.
+- Scelta della tecnologia del `repository` (JDBC, Spring Data JDBC o JPA): ADR ancora da scrivere.
 - Nessuna ADR in stato `Proposta` (la 0006 è decisa: opzione 3).
 - Prossima proposta prevista: design della sync (caricamento completo + eventi, punto di ripartenza, cancellazioni, UUID utente, recovery).
 

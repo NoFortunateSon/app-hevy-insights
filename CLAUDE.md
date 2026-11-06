@@ -42,6 +42,7 @@ Classic Spring layers (ADR 0007), as packages under the root package (which hold
 - `repository`: database access only (Postgres tables). No HTTP, no business logic.
 - `exception`: all exceptions. `config`: Spring configuration and properties. `model`: models, with DTOs in `model/dto`. A **model** is our own data (a table row, a domain object with its rules); a **DTO** only carries data across a boundary (from Hevy, or out through REST), has no logic and ends in `Dto`. `security`: everything about security. `utils`: the `Constants` class and classes that fit nowhere else.
 - `model`, `exception` and `utils` depend on no other package of the app.
+**One class, one task.** A class does one job and its name says which (client, mapper, retry policy, service, repository...). If you can describe what a class does only with "and", split it. A class over about 150 lines, or with more than one reason to change, needs a reason in the PR. Helper classes of one layer live in a sub-package of that layer (e.g. `controller/hevy`), package-private, so the layer exposes a small public entry point. The layer rules and `LayerDependencyTests` apply to sub-packages too (ADR 0007, addendum).
 Put new classes in the package of their type; do not create other top-level packages without an ADR. Do not extract shared libraries until the same code is needed in at least two apps.
 
 ## Data rules
