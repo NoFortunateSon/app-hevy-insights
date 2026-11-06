@@ -118,6 +118,34 @@
                             </formats>
                         </configuration>
                     </execution>
+                    <!-- Minimum coverage, decided by Alessio on 2026-11-07 (ADR 0011, addendum):
+                         the build fails below 90% of lines or 85% of branches. -->
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.90</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.85</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -174,6 +202,8 @@
                                 <param>XML</param>
                             </outputFormats>
                             <timestampedReports>false</timestampedReports>
+                            <!-- ADR 0011, addendum: the run fails if fewer than 90% of mutations are killed. -->
+                            <mutationThreshold>90</mutationThreshold>
                         </configuration>
                     </plugin>
                 </plugins>

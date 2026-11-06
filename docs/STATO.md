@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #48). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-07 (PR per issue #50). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -25,6 +25,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | Primo giro reale della sync registrato in questo file | #43 | Solo documentazione |
 | ADR 0011 accettata; conferma delle classi `public` di `controller/hevy` | #45 | CI verde |
 | JaCoCo, PIT (workflow settimanale), SonarQube Cloud in CI | #47 | CI verde su `main` (run 42297385212); prima analisi Sonar riuscita (vedi Verificato) |
+| ADR 0012 (repository pubblico, configurazione GitHub) e 0013 (frontend separato, backend monolitico), template di PR e issue, `CODEOWNERS`, `SECURITY.md`, workflow `Dependency review` | #49 | CI verde su `main` (run 42303108304) |
 | Lettura di `.env` in locale (`spring.config.import`), mai nei test | #37 | CI verde sulla PR (run 42276168661) |
 | ADR 0010 accettata: GitHub Actions pianificato + Postgres Neon gratuito | #39 | CI verde sulla PR (run 42280114727) |
 | Workflow `Hevy sync` ogni 6 ore (minuto 17 UTC) + modalità "una sync e poi esci" | #41 | CI verde sulla PR (run 42280746164); primo giro reale riuscito (vedi Verificato) |
@@ -51,12 +52,11 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #48, branch `claude/48-github-config`: ADR 0012 (repository pubblico, configurazione GitHub) e ADR 0013 (frontend separato, backend monolitico), template di PR e issue, `CODEOWNERS`, `SECURITY.md`, workflow `Dependency review`; `CLAUDE.md` aggiornato. CI: vedi i check della PR.
-- Per i prossimi progetti (ADR 0012): repository template privato `NoFortunateSon/template-spring-app` creato (CI verde, run 42301699357; lo script `scripts/rename-project.sh` provato su una copia: compila e passa i test) e script `platform-infra/scripts/configure-github-repo.sh` (PR platform-infra #6, CI verde; provato su questo repository: idempotente). Sui repository privati del piano Free l'auto-merge resta spento.
+- Issue #50, branch `claude/50-quality-thresholds`: soglie bloccanti decise da Alessio il 2026-11-07 (ADR 0011, addendum): Quality Gate Sonar bloccante, JaCoCo minimo 90% righe e 85% rami, PIT minimo 90%, PIT anche su ogni PR. CI: vedi i check della PR.
+- Per i prossimi progetti (ADR 0012): repository template privato `NoFortunateSon/template-spring-app` (CI verde, run 42301699357) e script `platform-infra/scripts/configure-github-repo.sh` (PR platform-infra #6, mergiata). Sui repository privati del piano Free l'auto-merge resta spento.
 - Dopo: ADR delle metriche.
 
 ## Decisioni in attesa di Alessio
-- Soglie di qualità proposte (ADR 0011, C1): Quality Gate di Sonar bloccante sulle PR; JaCoCo almeno 90% righe e 85% rami; PIT almeno 90% delle mutazioni scoperte.
 - La sync parte da `HevySyncController` (classe nuova) invece che da `HevyApiController`, per la regola 19: da confermare, oppure si accorpano (ADR 0008, sezione Implementazione).
 
 ## Per il coordinatore

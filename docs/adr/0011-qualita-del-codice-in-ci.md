@@ -61,3 +61,10 @@ Deciso da Alessio il 2026-11-06: **le raccomandazioni**. A1 SonarQube Cloud (pia
 - PIT ha trovato due buchi veri, chiusi in questa PR: nessun test verificava che `max-rate-limit-attempts = 1` fosse accettato, e nessuno il caso di attesa interrotta dopo un 429. Un metodo non usato (`HevySyncState.userId()`) è stato tolto.
 - SonarQube Cloud: passo in `ci.yml` dopo `mvn verify`, con `sonar-maven-plugin` 5.8.0.7211. Si salta finché mancano il secret `SONAR_TOKEN` e le variabili del repository `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY` (non segrete, quindi variabili e non secrets). `fetch-depth: 0` per distinguere il codice nuovo.
 - Nessuna soglia bloccante (C1): si fissano dopo aver visto i primi rapporti di Sonar.
+
+## Addendum: soglie bloccanti (issue #50, 2026-11-07)
+Deciso da Alessio il 2026-11-07, sui numeri misurati sopra:
+- **Quality Gate di SonarQube Cloud bloccante**: il passo Sonar in `ci.yml` usa `sonar.qualitygate.wait=true`, quindi il job `build` fallisce se il gate fallisce.
+- **JaCoCo**: `jacoco:check` in `verify`, minimo 90% delle righe e 85% dei rami. Sotto, `mvn verify` fallisce.
+- **PIT**: `mutationThreshold` 90. Sotto, il giro di PIT fallisce.
+- **PIT a ogni PR**: il repository ora è pubblico (ADR 0012) e i minuti di Actions sono illimitati, quindi il motivo per cui PIT girava solo il lunedì non vale più. Un giro dura circa 8 minuti. Il workflow `Mutation testing` gira anche su ogni pull request, oltre al lunedi' e a mano.
