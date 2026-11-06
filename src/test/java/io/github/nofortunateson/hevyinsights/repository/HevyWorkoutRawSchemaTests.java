@@ -15,7 +15,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
-/** Checks migration V1 on a real Postgres: the table exists and its constraints hold. Data is invented. */
+/** Checks the migrations on a real Postgres: the table exists and its constraints hold. Data is invented. */
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 class HevyWorkoutRawSchemaTests {
@@ -34,13 +34,13 @@ class HevyWorkoutRawSchemaTests {
     }
 
     @Test
-    void flywayAppliedVersionOne() {
+    void flywayAppliedLatestVersion() {
         String version = jdbc.sql("""
                 SELECT version FROM flyway_schema_history
                 WHERE success ORDER BY installed_rank DESC LIMIT 1
                 """).query(String.class).single();
 
-        assertThat(version).isEqualTo("1");
+        assertThat(version).isEqualTo("2");
     }
 
     @Test

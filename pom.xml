@@ -34,6 +34,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
+        <!-- Repository technology (ADR 0009). Version from the Boot BOM (Hibernate 7.4.13.Final). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
         <!-- Not pulled in by the Flyway starter: since Flyway 10 each database has its own module. Version from the Boot BOM. -->
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -72,6 +77,19 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Tests never reach the real Hevy API (CLAUDE.md), even if HEVY_API_KEY is set on the
+                         machine: no scheduled sync, and the Hevy base URL is a closed local port (discard, 9),
+                         so a stray call fails at once. A test may override both itself. -->
+                    <systemPropertyVariables>
+                        <hevy-insights.sync.scheduled>false</hevy-insights.sync.scheduled>
+                        <hevy.api.base-url>http://127.0.0.1:9</hevy.api.base-url>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
