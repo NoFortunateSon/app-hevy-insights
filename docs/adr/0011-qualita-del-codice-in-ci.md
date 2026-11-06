@@ -52,3 +52,12 @@ Deciso da Alessio il 2026-11-06: **le raccomandazioni**. A1 SonarQube Cloud (pia
 - `ci.yml`: un passo che, se `SONAR_TOKEN` esiste, lancia l'analisi SonarQube dopo `mvn verify`; un passo per PIT con il rapporto salvato come artefatto del giro. Le PR di Dependabot non ricevono i secrets: per loro l'analisi Sonar si salta.
 - Alessio: crea l'organizzazione e il progetto su SonarQube Cloud importando il repository GitHub, spegne l'analisi automatica, crea un token e lo salva come secret `SONAR_TOKEN`. Le chiavi `sonar.organization` e `sonar.projectKey` vanno nel `pom.xml` (non sono segrete).
 - Da verificare nella PR: che PIT funzioni con Java 25 e Testcontainers (se non funziona, si scrive e si decide); quanto tempo aggiunge alla CI.
+
+## Implementazione (issue #46, 2026-11-06)
+- JaCoCo 0.8.16 gira in ogni `mvn verify` e scrive `target/site/jacoco/jacoco.xml` (più HTML). Prima misura: righe 96,9%, rami 91,5%.
+- PIT 1.30.2 (+ `pitest-junit5-plugin` 1.2.3) nel profilo `mutation`: **funziona con Java 25** (provato in locale). Prima misura, con i test veloci e i test di integrazione della sync: 97 mutazioni, 91 scoperte (94%), righe coperte 98%; durata circa 8 minuti in locale.
+- **Cambio rispetto alle Conseguenze:** PIT non gira a ogni PR ma nel workflow `Mutation testing` (lunedì 03:41 UTC e a mano), con il rapporto come artefatto. A ogni PR costerebbe circa 8 minuti: con il ritmo attuale di PR consumerebbe i ~2.000 minuti gratuiti di GitHub, che servono anche alla sync (ADR 0010).
+- Le mutazioni rimaste: due "equivalenti" in `RateLimitRetryPolicy` (cambiare `>` in `>=` dove i valori sono già uguali non cambia il risultato) e due nei bean di configurazione Spring (`clock`, `hevyApiController`): sotto PIT il contesto Spring resta in cache tra una mutazione e l'altra, quindi quei bean li verifica l'avvio del contesto nei test normali, non PIT.
+- PIT ha trovato due buchi veri, chiusi in questa PR: nessun test verificava che `max-rate-limit-attempts = 1` fosse accettato, e nessuno il caso di attesa interrotta dopo un 429. Un metodo non usato (`HevySyncState.userId()`) è stato tolto.
+- SonarQube Cloud: passo in `ci.yml` dopo `mvn verify`, con `sonar-maven-plugin` 5.8.0.7211. Si salta finché mancano il secret `SONAR_TOKEN` e le variabili del repository `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY` (non segrete, quindi variabili e non secrets). `fetch-depth: 0` per distinguere il codice nuovo.
+- Nessuna soglia bloccante (C1): si fissano dopo aver visto i primi rapporti di Sonar.

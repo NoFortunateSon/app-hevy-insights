@@ -192,6 +192,26 @@ class HevyApiControllerContractTests {
     }
 
     @Test
+    void interruptedWaitAfterRateLimitFailsAndKeepsTheInterruptFlag() {
+        RestClient.Builder builder = HevyApiConfiguration.restClientBuilder(
+                new HevyApiProperties(URI.create(BASE), FAKE_KEY, 5));
+        server = MockRestServiceServer.bindTo(builder).build();
+        HevyApiController controller = new HevyApiController(builder.build(), delay -> {
+            throw new InterruptedException("stop");
+        }, 5);
+        server.expect(requestTo(workoutsPage(1))).andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
+
+        try {
+            assertThatThrownBy(controller::fetchAllWorkouts)
+                    .isInstanceOf(HevyApiException.class)
+                    .hasMessage("Interrupted while waiting for the Hevy rate limit");
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            Thread.interrupted(); // clear the flag for the next tests on this thread
+        }
+    }
+
+    @Test
     void propertiesNeverPrintTheKey() {
         assertThat(new HevyApiProperties(URI.create(BASE), FAKE_KEY, 5).toString())
                 .doesNotContain(FAKE_KEY)
