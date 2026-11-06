@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR #31). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #32). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -18,7 +18,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | ADR 0007 accettata: package `controller` → `service` → `repository`, più `exception`, `config`, `model` (`dto`), `security`, `utils`; `LayerDependencyTests` | #23 | CI verde su `main` (run 42265118957) |
 | Classi rinominate per ruolo; client Hevy = `controller/HevyApiController` (il repository è solo database); criterio model/DTO | #25 | CI verde su `main` (run 42265157454) |
 | Regola 19 "una classe, un compito", aggiunta all'ADR 0007 | #28 | CI verde su `main` (run 42266731836) |
-| ADR 0009: tecnologia del repository JPA (accettata; starter verificati nel BOM di Boot 4.1.2: Hibernate 7.4.13.Final) | #31 | Solo documentazione; vale con il merge |
+| `HevyApiController` diviso per compiti: `controller/hevy` (`HevyHttpClient`, `HevyPageWalker`, `HevyResponseMapper`), `utils/RateLimitRetryPolicy`; nessun cambio di comportamento | #29 | CI verde sulla PR (run 42268241973) e su `main` (run 42269874487); 34 test in locale |
+| ADR 0008 `Proposta`: design della sync | #31 | CI verde su `main` (run 42270489208); solo documentazione |
 
 ## Verificato
 - La CI usa Testcontainers con Postgres 18.6 sul runner GitHub (`ubuntu-latest`): funziona (run della PR #12).
@@ -36,8 +37,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #30, PR #31, branch `claude/30-adr-sync-design` (parte dal branch della #29): ADR 0008 in stato `Proposta` con le indicazioni di Alessio sui punti non documentati; ADR 0009 accettata (JPA; dipendenze da aggiungere con la sync). Solo documentazione.
-- Issue #27, PR #29, branch `claude/27-split-hevy-api-controller`: `HevyApiController` (da 218 a 48 righe) diviso per compiti: `controller/hevy/HevyHttpClient` (chiamata HTTP, stato, attese su 429), `controller/hevy/HevyPageWalker` (pagine), `controller/hevy/HevyResponseMapper` (JSON → DTO), `utils/RateLimitRetryPolicy` (quando riprovare dopo 429). Nessun cambio di comportamento: contract test invariati e verdi (il test sul ritardo dopo 429 è passato a `RateLimitRetryPolicyTests`). Nuovi test unitari per `RateLimitRetryPolicy` e `HevyResponseMapper`; `LayerDependencyTests` verifica che solo `HevyApiController` usi `controller/hevy` (provato con una violazione voluta: il test fallisce). 34 test verdi in locale con `mvn verify`; CI: vedi i check della PR. Nessuna classe aggiunta in `model`, `repository`, `service`.
+- Issue #32, branch `claude/32-sync-answers-jpa`: nell'ADR 0008 le indicazioni di Alessio sui punti non documentati da Hevy e sul recupero; ADR 0009 accettata (JPA; starter verificati nel BOM di Boot 4.1.2, Hibernate 7.4.13.Final; dipendenze da aggiungere con la sync). Solo documentazione. Nota: la PR #31 era già mergiata quando questo commit è stato pubblicato, da qui la nuova issue.
 
 ## Decisioni in attesa di Alessio
 - **ADR 0008 `Proposta` (issue #30): design della sync.** Cinque scelte (A-E): strategia di caricamento, punto di ripartenza, cancellazioni, UUID dell'unico utente, chi fa partire la sync. Raccomandazioni di Claude nell'ADR; la Decisione è vuota. Alessio ha già dato le indicazioni sui punti non documentati da Hevy (vedi sotto).
