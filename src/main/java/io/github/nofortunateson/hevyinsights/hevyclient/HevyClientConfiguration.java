@@ -9,6 +9,9 @@ import org.springframework.web.client.RestClient;
 @EnableConfigurationProperties(HevyApiProperties.class)
 class HevyClientConfiguration {
 
+    /** Header name documented by Hevy for the user's API key. */
+    static final String API_KEY_HEADER = "api-key";
+
     @Bean
     HevyClient hevyClient(HevyApiProperties properties) {
         return new HevyClient(restClientBuilder(properties).build(), Sleeper.REAL,
@@ -16,7 +19,7 @@ class HevyClientConfiguration {
     }
 
     /**
-     * Base URL plus the {@code api-key} header. The key is checked when a request is sent, not at
+     * Base URL plus the API key header. The key is checked when a request is sent, not at
      * startup, so the app can start without it (for example to serve stored metrics).
      */
     static RestClient.Builder restClientBuilder(HevyApiProperties properties) {
@@ -26,7 +29,7 @@ class HevyClientConfiguration {
                     if (!properties.hasKey()) {
                         throw new IllegalStateException("Hevy API key missing: set HEVY_API_KEY");
                     }
-                    request.getHeaders().set("api-key", properties.key());
+                    request.getHeaders().set(API_KEY_HEADER, properties.key());
                     return execution.execute(request, body);
                 });
     }

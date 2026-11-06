@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR #18). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #19). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -12,6 +12,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | Dependabot per Maven e GitHub Actions | #10 | CI verde |
 | Flyway, Testcontainers, tabella `hevy_workout_raw` (V1), ADR 0005 (accettata) | #12 | CI verde sulla PR e su `main`; 7 test in locale secondo la descrizione della PR |
 | Regola del file di stato, `docs/STATO.md` | #16 | Solo documentazione |
+| `HevyClient` in sola lettura (workout ed eventi, paginazione, retry su 429), contract test; README, `.gitattributes` | #15 | CI verde sulla PR e su `main` (run 42256422866) |
+| Linee guida di codice `docs/linee-guida.md`, ADR 0006 proposta | #18 | CI verde su `main` (run 42257789483) |
 
 ## Verificato
 - La CI usa Testcontainers con Postgres 18.6 sul runner GitHub (`ubuntu-latest`): funziona (run della PR #12).
@@ -31,10 +33,10 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": i tempi di recupero tra le serie non ci sono nei workout; va ridefinita o tolta (decisione di Alessio).
 
 ## In corso
-- PR #15 (issue #13), branch `claude/13-hevyclient-workouts`: `HevyClient` in sola lettura (workout ed eventi, paginazione, retry su 429), contract test con dati inventati; README riscritto, `.gitattributes` (LF), questo file. 17 test verdi in locale con `mvn verify`; CI: vedi i check della PR.
+- Issue #19, branch `claude/19-apply-guidelines`: ADR 0006 accettata (opzione 3, ibrida) e regola 18 in `docs/linee-guida.md`; `hevyclient` adeguato alle linee guida (niente valori magici, stato HTTP come `OptionalInt` al posto di -1, metodi privati estratti per nome, URL non duplicati nei test). Interfaccia pubblica invariata salvo `HevyApiException.statusCode()` (ora `OptionalInt`). 17 test verdi in locale con `mvn verify`; CI: vedi i check della PR.
 
 ## Decisioni in attesa di Alessio
-- ADR 0006 `Proposta` (PR #18): dimensione delle funzioni, contraddizione Fowler / Ousterhout.
+- Nessuna ADR in stato `Proposta` (la 0006 è decisa: opzione 3).
 - Prossima proposta prevista: design della sync (caricamento completo + eventi, punto di ripartenza, cancellazioni, UUID utente, recovery).
 
 ## Per il coordinatore

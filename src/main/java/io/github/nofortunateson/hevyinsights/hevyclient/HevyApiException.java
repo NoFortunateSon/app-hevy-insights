@@ -1,22 +1,31 @@
 package io.github.nofortunateson.hevyinsights.hevyclient;
 
+import java.util.OptionalInt;
+
 /** Hevy answered with an unexpected status or a body this client cannot read. */
 public class HevyApiException extends RuntimeException {
 
-    private final int statusCode;
+    private final OptionalInt statusCode;
 
-    HevyApiException(String message, int statusCode) {
+    /** The response arrived but its content is not what the client expects. */
+    HevyApiException(String message) {
         super(message);
-        this.statusCode = statusCode;
+        this.statusCode = OptionalInt.empty();
     }
 
     HevyApiException(String message, Throwable cause) {
         super(message, cause);
-        this.statusCode = -1;
+        this.statusCode = OptionalInt.empty();
     }
 
-    /** HTTP status returned by Hevy, or -1 when the failure was not an HTTP status. */
-    public int statusCode() {
+    /** Hevy answered with an HTTP status the client does not accept. */
+    HevyApiException(String message, int statusCode) {
+        super(message);
+        this.statusCode = OptionalInt.of(statusCode);
+    }
+
+    /** HTTP status returned by Hevy; empty when the failure was not an HTTP status. */
+    public OptionalInt statusCode() {
         return statusCode;
     }
 }

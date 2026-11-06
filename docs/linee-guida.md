@@ -1,6 +1,6 @@
 # Linee guida di codice (app-hevy-insights)
 
-Regole di progettazione per Claude Code e per chi scrive codice in questo repo. Sono note mie, scritte con parole mie, tratte dai libri di Alessio in OneDrive (`PROGRAMMAZIONE\LIBRI`). Ultimo aggiornamento: 2026-11-06.
+Regole di progettazione per Claude Code e per chi scrive codice in questo repo. Sono note mie, scritte con parole mie, tratte dai libri di Alessio in OneDrive (`PROGRAMMAZIONE\LIBRI`). Ultimo aggiornamento: 2026-11-06 (regola 18 da ADR 0006).
 
 **Come si usano.** Le regole valgono per ogni PR. Se una regola si scontra con un'altra o con un ADR, non scegliere tu: scrivi un ADR in stato `Proposta`. Una regola `[Opinione]` è una mia sintesi, non un'affermazione del libro.
 
@@ -27,13 +27,11 @@ Regole di progettazione per Claude Code e per chi scrive codice in questo repo. 
 | 15 | **Test come rete per il refactoring.** Senza test automatici non si rifattorizza. Ogni PR porta i suoi test (già in `CLAUDE.md`). | Il refactoring è sicuro solo se un test fallisce quando si rompe qualcosa. | — | Fowler cap. 2 | Fatto |
 | 16 | **Interfacce non banali: prova due progetti** e scegli quello con interfaccia più semplice. | La prima idea di rado è la migliore. | Interfacce piccole o già decise da un ADR. | Ousterhout, principio 12 | Fatto |
 | 17 | **Un solo modo di fare ogni cosa** (nomi, gestione errori, struttura dei test). Prima di introdurre un nuovo stile, cerca come si fa già nel repo. | Chi legge impara una volta sola. | Quando lo stile esistente è sbagliato: proponi di cambiarlo, non mischiare. | Ousterhout cap. 17 (letto solo il titolo nell'indice) | Opinione |
-
-## Punto aperto: dimensione delle funzioni
-Fowler consiglia di spezzare molto: funzioni brevi con nome che dice l'intenzione, e un commento che spiega "cosa fa" è un invito a estrarre una funzione. Ousterhout avverte che spezzare troppo crea moduli superficiali (ha un paragrafo che discute proprio questa differenza). **Non è risolto**: vedi `docs/adr/0006-dimensione-delle-funzioni.md` (stato `Proposta`).
-Nel frattempo: spezza quando un blocco ha un nome naturale e un solo scopo; non spezzare per rispettare una lunghezza; non creare funzioni che inoltrano soltanto (regola 3).
+| 18 | **Dimensione delle funzioni: regola ibrida.** Interfaccia pubblica piccola e profonda; dentro la classe si estrae un metodo privato solo se il blocco ha un nome naturale e si capisce da solo. Nessun limite di righe. | Funzioni brevi dove il nome documenta, senza frammentare in pezzi che si capiscono solo insieme. | Un blocco che si capisce solo leggendo chi lo chiama: lascialo dov'è. | ADR 0006; Fowler cap. 3 "Long Function"; Ousterhout cap. 9 | Fatto |
 
 ## Checklist per ogni PR
 - Un modulo nasconde una decisione (regole 1-2)? Nessun livello che inoltra (3)?
 - Nomi precisi (6), nessun valore magico (9), nessun dato globale mutabile (7).
+- Funzioni: interfaccia pubblica piccola; metodi privati estratti solo con un nome naturale (18, ADR 0006).
 - Nessuna duplicazione (5); commenti solo dove servono (11); niente flessibilità non usata (13).
 - Test presenti e CI letta (15). `docs/STATO.md` aggiornato (vedi `CLAUDE.md`).

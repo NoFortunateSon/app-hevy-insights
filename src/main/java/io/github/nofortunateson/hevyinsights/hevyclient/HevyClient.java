@@ -7,7 +7,11 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -60,7 +64,7 @@ public class HevyClient {
         int page = 1;
         int pageCount;
         do {
-            JsonNode body = get(path, query, page);
+            JsonNode body = fetchPage(path, query, page);
             for (JsonNode item : requiredArray(body, itemsField)) {
                 items.add(mapper.apply(item));
             }
@@ -70,54 +74,76 @@ public class HevyClient {
         return items;
     }
 
-    private JsonNode get(String path, Map<String, String> query, int page) {
+    /** One page, waiting and retrying while Hevy answers 429. */
+    private JsonNode fetchPage(String path, Map<String, String> query, int page) {
         for (int attempt = 1; ; attempt++) {
-            Response response = restClient.get()
-                    .uri(builder -> {
-                        builder.path(path)
-                                .queryParam("page", page)
-                                .queryParam("pageSize", PAGE_SIZE);
-                        query.forEach(builder::queryParam);
-                        return builder.build();
-                    })
-                    .exchange((request, res) -> new Response(
-                            res.getStatusCode().value(),
-                            res.getHeaders().getFirst("Retry-After"),
-                            new String(res.getBody().readAllBytes(), StandardCharsets.UTF_8)));
-
-            if (response.status() == 429) {
-                if (attempt >= maxRateLimitAttempts) {
-                    throw new HevyRateLimitedException("Hevy rate limit on " + path + " after "
-                            + attempt + " attempts");
-                }
-                pause(retryDelay(response.retryAfter(), attempt));
-                continue;
+            Response response = send(path, query, page);
+            if (!response.status().isSameCodeAs(HttpStatus.TOO_MANY_REQUESTS)) {
+                return parseSuccessfulBody(path, response);
             }
-            if (response.status() < 200 || response.status() >= 300) {
-                throw new HevyApiException("Hevy answered HTTP " + response.status() + " on " + path,
-                        response.status());
+            if (attempt >= maxRateLimitAttempts) {
+                throw new HevyRateLimitedException(
+                        "Hevy rate limit on " + path + " after " + attempt + " attempts");
             }
-            try {
-                return JSON.readTree(response.body());
-            } catch (JacksonException e) {
-                throw new HevyApiException("Hevy returned unreadable JSON on " + path, e);
-            }
+            pause(retryDelay(response.retryAfter(), attempt));
         }
     }
 
-    static Duration retryDelay(String retryAfter, int attempt) {
-        if (retryAfter != null) {
-            try {
-                long seconds = Long.parseLong(retryAfter.trim());
-                if (seconds >= 0) {
-                    return Duration.ofSeconds(Math.min(seconds, MAX_BACKOFF.toSeconds()));
-                }
-            } catch (NumberFormatException ignored) {
-                // HTTP-date form or garbage: fall back to backoff.
-            }
+    private Response send(String path, Map<String, String> query, int page) {
+        return restClient.get()
+                .uri(builder -> {
+                    builder.path(path)
+                            .queryParam("page", page)
+                            .queryParam("pageSize", PAGE_SIZE);
+                    query.forEach(builder::queryParam);
+                    return builder.build();
+                })
+                .exchange((request, res) -> new Response(
+                        res.getStatusCode(),
+                        res.getHeaders().getFirst(HttpHeaders.RETRY_AFTER),
+                        new String(res.getBody().readAllBytes(), StandardCharsets.UTF_8)));
+    }
+
+    private static JsonNode parseSuccessfulBody(String path, Response response) {
+        if (!response.status().is2xxSuccessful()) {
+            throw new HevyApiException("Hevy answered HTTP " + response.status().value() + " on " + path,
+                    response.status().value());
         }
-        Duration backoff = INITIAL_BACKOFF.multipliedBy(1L << Math.min(attempt - 1, 16));
-        return backoff.compareTo(MAX_BACKOFF) > 0 ? MAX_BACKOFF : backoff;
+        try {
+            return JSON.readTree(response.body());
+        } catch (JacksonException e) {
+            throw new HevyApiException("Hevy returned unreadable JSON on " + path, e);
+        }
+    }
+
+    /** {@code Retry-After} in seconds when Hevy sends it, otherwise exponential backoff; both capped. */
+    static Duration retryDelay(String retryAfter, int attempt) {
+        return retryAfterSeconds(retryAfter).orElseGet(() -> exponentialBackoff(attempt));
+    }
+
+    /** Only the delta-seconds form; the HTTP-date form or garbage yields empty. */
+    private static Optional<Duration> retryAfterSeconds(String retryAfter) {
+        if (retryAfter == null) {
+            return Optional.empty();
+        }
+        try {
+            long seconds = Long.parseLong(retryAfter.trim());
+            return seconds < 0 ? Optional.empty() : Optional.of(capped(Duration.ofSeconds(seconds)));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static Duration exponentialBackoff(int attempt) {
+        Duration backoff = INITIAL_BACKOFF;
+        for (int doubling = 1; doubling < attempt && backoff.compareTo(MAX_BACKOFF) < 0; doubling++) {
+            backoff = backoff.multipliedBy(2);
+        }
+        return capped(backoff);
+    }
+
+    private static Duration capped(Duration delay) {
+        return delay.compareTo(MAX_BACKOFF) > 0 ? MAX_BACKOFF : delay;
     }
 
     private void pause(Duration delay) {
@@ -138,19 +164,22 @@ public class HevyClient {
         String type = requiredText(node, "type");
         return switch (type) {
             case "updated" -> new HevyWorkoutEvent.Updated(toWorkout(required(node, "workout")));
-            case "deleted" -> {
-                JsonNode deletedAt = node.path("deleted_at");
-                yield new HevyWorkoutEvent.Deleted(requiredText(node, "id"),
-                        deletedAt.isString() ? parseInstant(deletedAt.asString()) : null);
-            }
-            default -> throw new HevyApiException("Unknown Hevy workout event type: " + type, -1);
+            case "deleted" -> toDeletedEvent(node);
+            default -> throw new HevyApiException("Unknown Hevy workout event type: " + type);
         };
+    }
+
+    /** {@code deleted_at} is optional in the Hevy spec. */
+    private static HevyWorkoutEvent.Deleted toDeletedEvent(JsonNode node) {
+        JsonNode deletedAt = node.path("deleted_at");
+        return new HevyWorkoutEvent.Deleted(requiredText(node, "id"),
+                deletedAt.isString() ? parseInstant(deletedAt.asString()) : null);
     }
 
     private static JsonNode required(JsonNode node, String field) {
         JsonNode value = node.path(field);
         if (value.isMissingNode() || value.isNull()) {
-            throw new HevyApiException("Hevy response lacks field: " + field, -1);
+            throw new HevyApiException("Hevy response lacks field: " + field);
         }
         return value;
     }
@@ -158,7 +187,7 @@ public class HevyClient {
     private static String requiredText(JsonNode node, String field) {
         JsonNode value = required(node, field);
         if (!value.isString()) {
-            throw new HevyApiException("Hevy field is not a string: " + field, -1);
+            throw new HevyApiException("Hevy field is not a string: " + field);
         }
         return value.asString();
     }
@@ -166,7 +195,7 @@ public class HevyClient {
     private static JsonNode requiredArray(JsonNode node, String field) {
         JsonNode value = required(node, field);
         if (!value.isArray()) {
-            throw new HevyApiException("Hevy field is not an array: " + field, -1);
+            throw new HevyApiException("Hevy field is not an array: " + field);
         }
         return value;
     }
@@ -179,6 +208,6 @@ public class HevyClient {
         }
     }
 
-    private record Response(int status, String retryAfter, String body) {
+    private record Response(HttpStatusCode status, String retryAfter, String body) {
     }
 }

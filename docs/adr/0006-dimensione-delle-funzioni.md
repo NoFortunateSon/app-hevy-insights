@@ -1,6 +1,6 @@
 # 0006 - Dimensione delle funzioni: piccole ovunque o moduli profondi
 
-Stato: Proposta
+Stato: Accettata
 Data: 2026-11-06
 
 ## Contesto
@@ -19,7 +19,10 @@ Data: 2026-11-06
    - Pro: usa il punto forte di ciascuno. Contro: richiede giudizio, quindi meno verificabile.
 
 ## Decisione
-(da compilare da Alessio)
+Deciso da Alessio il 2026-11-06: **opzione 3, regola ibrida**.
+- Interfaccia di moduli e classi pubbliche: piccola e profonda (Ousterhout). Nessun metodo pubblico in più per spezzare il lavoro.
+- Dentro la classe: si estrae un metodo privato quando il blocco ha un nome naturale e si capisce da solo (Fowler). Non si estrae un pezzo che si capisce solo leggendo chi lo chiama.
+- Nessun limite di righe o di parametri numerico. In revisione si guarda se la funzione fa una cosa sola e se i pezzi estratti si leggono da soli.
 
 ## Conseguenze
 - Cambia la regola dedicata in `docs/linee-guida.md` e va aggiornato `CLAUDE.md` solo se la scelta aggiunge un obbligo.
