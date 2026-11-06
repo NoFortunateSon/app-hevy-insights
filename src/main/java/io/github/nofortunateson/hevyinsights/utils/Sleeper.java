@@ -1,10 +1,10 @@
-package io.github.nofortunateson.hevyinsights.hevyclient;
+package io.github.nofortunateson.hevyinsights.utils;
 
 import java.time.Duration;
 
 /** Waits between retries. A seam so tests do not really sleep. */
 @FunctionalInterface
-interface Sleeper {
+public interface Sleeper {
 
     Sleeper REAL = Thread::sleep;
 

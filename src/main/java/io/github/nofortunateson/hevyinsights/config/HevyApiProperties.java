@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.hevyclient;
+package io.github.nofortunateson.hevyinsights.config;
 
 import java.net.URI;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -23,7 +23,7 @@ public record HevyApiProperties(
         }
     }
 
-    boolean hasKey() {
+    public boolean hasKey() {
         return key != null && !key.isBlank();
     }
 

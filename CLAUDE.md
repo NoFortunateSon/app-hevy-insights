@@ -36,12 +36,13 @@ Follow `docs/linee-guida.md` (design rules distilled from the books Alessio owns
 - Local ports: Spring apps use 8080-8099. Local services come from the shared compose in the `platform-infra` repo (one database and one user per project).
 
 ## Architecture
-Modular monolith. Modules are packages with one-way dependencies:
-- `hevyclient`: calls to the Hevy API, pagination, HTTP 429 handling. No domain logic. This is the only module that knows the Hevy API shape, because Hevy states it may change or drop the API.
-- `sync`: incremental synchronisation (first full load, then only changes). Stores the original JSON and normalised rows.
-- `metrics`: computes metrics from stored data only. Never calls Hevy.
-- `api`: read-only REST over the metrics.
-Keep modules deep with small interfaces and hide design decisions inside them. Do not extract shared libraries until the same code is needed in at least two apps.
+Classic Spring layers (ADR 0007), as packages under the root package (which holds only the `main` class). `controller` → `service` → `repository`, never backwards and without skipping a layer; `LayerDependencyTests` enforces it.
+- `controller`: handles HTTP requests, validates input, returns responses (read-only REST over the metrics). Calls services only.
+- `service`: business logic. Incremental sync (first full load, then only changes; stores the original JSON and normalised rows) and metrics computed from stored data only (metrics never call Hevy).
+- `repository`: data access, both the Postgres tables and the Hevy API as a read-only data source. `HevyClient` is the only class that reads Hevy's JSON, because Hevy states it may change or drop the API.
+- `exception`: all exceptions. `config`: Spring configuration and properties. `model`: models, with DTOs in `model/dto`. `security`: everything about security. `utils`: the `Constants` class and classes that fit nowhere else.
+- `model`, `exception` and `utils` depend on no other package of the app.
+Put new classes in the package of their type; do not create other top-level packages without an ADR. Do not extract shared libraries until the same code is needed in at least two apps.
 
 ## Data rules
 - Every table has a `user_id` column from day one.
@@ -50,7 +51,7 @@ Keep modules deep with small interfaces and hide design decisions inside them. D
 - Metric definitions are proposals until Alessio confirms them on his real data. "Recovery" depends on whether the API exposes rest times: check on real data before promising it.
 
 ## Testing
-- Contract tests for `hevyclient` against recorded responses. No call to the real Hevy API in CI.
+- Contract tests for `HevyClient` against recorded responses. No call to the real Hevy API in CI.
 - Metric tests with invented data.
 - Integration tests with a real Postgres via Testcontainers (ADR 0004). The shared compose from `platform-infra` is only for running the app locally, never for tests.
 - Schema migrations with Flyway at the version managed by the Spring Boot BOM (ADR 0004). Never edit a migration that has already been applied: add a new one.

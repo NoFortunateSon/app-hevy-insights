@@ -25,14 +25,19 @@ L'app parte anche senza `HEVY_API_KEY`: la chiave viene controllata solo quando 
 - Avvio locale: prima `docker compose up -d --wait` in `platform-infra`, poi `mvn spring-boot:run`. Porta 8080, health su `/actuator/health`.
 
 ## Struttura
-Monolite modulare: un package per modulo, dipendenze in un solo verso (`hevyclient` ← `sync` ← `metrics` ← `api`).
+Livelli classici di Spring (ADR 0007): `controller` → `service` → `repository`, mai al contrario e senza saltare livelli; lo controlla `LayerDependencyTests`.
 
-| Modulo | Cosa fa | Stato |
+| Package | Cosa contiene | Oggi |
 |---|---|---|
-| `hevyclient` | Chiamate all'API Hevy, paginazione, gestione HTTP 429. Unico modulo che conosce la forma dell'API. | Workout ed eventi dei workout |
-| `sync` | Sync incrementale; salva il JSON originale e le righe normalizzate. | Solo tabella `hevy_workout_raw` |
-| `metrics` | Metriche calcolate solo dai dati salvati. | Vuoto |
-| `api` | REST in sola lettura sulle metriche. | Vuoto |
+| (radice) | La classe `main` | `HevyInsightsApplication` |
+| `controller` | Richieste HTTP, validazione, risposte (REST in sola lettura) | Vuoto |
+| `service` | Logica di business: sync incrementale, metriche | Vuoto |
+| `repository` | Accesso ai dati: Postgres e API Hevy (sola lettura) | `HevyClient`; tabella `hevy_workout_raw` (migrazione V1) |
+| `exception` | Tutte le eccezioni | `HevyApiException`, `HevyRateLimitedException` |
+| `config` | Configurazioni | `HevyClientConfiguration`, `HevyApiProperties` |
+| `model`, `model/dto` | Modelli; DTO nella sottocartella | `HevyWorkout`, `HevyWorkoutEvent` (DTO) |
+| `security` | Sicurezza | Vuoto |
+| `utils` | `Constants` e classi che non rientrano altrove | `Constants`, `Sleeper` |
 
 Migrazioni Flyway in `src/main/resources/db/migration`. Una migrazione già applicata non si modifica: se ne aggiunge una nuova.
 
@@ -44,3 +49,5 @@ In `docs/adr/`, in italiano. La numerazione parte da 0003 perché 0001 e 0002 so
 | [0003](docs/adr/0003-primo-progetto-hevy-insights.md) | Primo progetto: analisi dei dati Hevy | Accettata |
 | [0004](docs/adr/0004-migrazioni-db-e-test-di-integrazione.md) | Migrazioni del database e test di integrazione | Accettata |
 | [0005](docs/adr/0005-prima-tabella-workout-grezzi.md) | Prima tabella: workout grezzi e tipo di `user_id` | Accettata |
+| [0006](docs/adr/0006-dimensione-delle-funzioni.md) | Dimensione delle funzioni | Accettata |
+| [0007](docs/adr/0007-struttura-dei-package.md) | Struttura dei package: controller, service, repository | Accettata |

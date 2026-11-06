@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.hevyclient;
+package io.github.nofortunateson.hevyinsights.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -11,6 +11,13 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import io.github.nofortunateson.hevyinsights.config.HevyApiProperties;
+import io.github.nofortunateson.hevyinsights.config.HevyClientConfiguration;
+import io.github.nofortunateson.hevyinsights.exception.HevyApiException;
+import io.github.nofortunateson.hevyinsights.exception.HevyRateLimitedException;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkout;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutEvent;
+import io.github.nofortunateson.hevyinsights.utils.Constants;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -60,7 +67,7 @@ class HevyClientContractTests {
     }
 
     private static ClassPathResource fixture(String name) {
-        return new ClassPathResource("hevyclient/" + name);
+        return new ClassPathResource("hevy/" + name);
     }
 
     @Test
@@ -68,11 +75,11 @@ class HevyClientContractTests {
         HevyClient client = client(FAKE_KEY, 5);
         server.expect(requestTo(workoutsPage(1)))
                 .andExpect(method(HttpMethod.GET))
-                .andExpect(header(HevyClientConfiguration.API_KEY_HEADER, FAKE_KEY))
+                .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
                 .andRespond(withSuccess(fixture("workouts-page-1.json"), MediaType.APPLICATION_JSON));
         server.expect(requestTo(workoutsPage(2)))
                 .andExpect(method(HttpMethod.GET))
-                .andExpect(header(HevyClientConfiguration.API_KEY_HEADER, FAKE_KEY))
+                .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
                 .andRespond(withSuccess(fixture("workouts-page-2.json"), MediaType.APPLICATION_JSON));
 
         List<HevyWorkout> workouts = client.fetchAllWorkouts();
@@ -101,7 +108,7 @@ class HevyClientContractTests {
         HevyClient client = client(FAKE_KEY, 5);
         server.expect(requestTo(eventsFirstPage(SINCE)))
                 .andExpect(method(HttpMethod.GET))
-                .andExpect(header(HevyClientConfiguration.API_KEY_HEADER, FAKE_KEY))
+                .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
                 .andRespond(withSuccess(fixture("workout-events-page-1.json"), MediaType.APPLICATION_JSON));
 
         List<HevyWorkoutEvent> events = client.fetchWorkoutEventsSince(SINCE);
@@ -193,8 +200,8 @@ class HevyClientContractTests {
 
     @Test
     void retryAfterIsCappedAndMalformedValuesFallBackToBackoff() {
-        assertThat(HevyClient.retryDelay("3600", 1)).isEqualTo(HevyClient.MAX_BACKOFF);
+        assertThat(HevyClient.retryDelay("3600", 1)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
         assertThat(HevyClient.retryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 2)).isEqualTo(Duration.ofSeconds(2));
-        assertThat(HevyClient.retryDelay(null, 30)).isEqualTo(HevyClient.MAX_BACKOFF);
+        assertThat(HevyClient.retryDelay(null, 30)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
     }
 }
