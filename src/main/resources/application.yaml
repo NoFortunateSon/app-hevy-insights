@@ -1,6 +1,12 @@
 spring:
   application:
     name: app-hevy-insights
+  # Local run against the shared Postgres of platform-infra (database and user hevy_insights).
+  # Tests do not use this: they get a Testcontainers Postgres via @ServiceConnection.
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hevy_insights
+    username: hevy_insights
+    password: ${HEVY_INSIGHTS_DB_PASSWORD:}
 
 server:
   port: 8080
