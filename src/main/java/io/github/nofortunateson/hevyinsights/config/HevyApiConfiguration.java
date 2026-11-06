@@ -1,6 +1,6 @@
 package io.github.nofortunateson.hevyinsights.config;
 
-import io.github.nofortunateson.hevyinsights.repository.HevyWorkoutRepository;
+import io.github.nofortunateson.hevyinsights.controller.HevyApiController;
 import io.github.nofortunateson.hevyinsights.utils.Constants;
 import io.github.nofortunateson.hevyinsights.utils.RetrySleeper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,8 +13,8 @@ import org.springframework.web.client.RestClient;
 public class HevyApiConfiguration {
 
     @Bean
-    HevyWorkoutRepository hevyWorkoutRepository(HevyApiProperties properties) {
-        return new HevyWorkoutRepository(restClientBuilder(properties).build(), RetrySleeper.REAL,
+    HevyApiController hevyApiController(HevyApiProperties properties) {
+        return new HevyApiController(restClientBuilder(properties).build(), RetrySleeper.REAL,
                 properties.maxRateLimitAttempts());
     }
 

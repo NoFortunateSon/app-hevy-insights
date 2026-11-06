@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.repository;
+package io.github.nofortunateson.hevyinsights.controller;
 
 import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_INITIAL_BACKOFF;
 import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_MAX_BACKOFF;
@@ -35,7 +35,7 @@ import tools.jackson.databind.json.JsonMapper;
  * {@code Retry-After} in seconds when present, otherwise with exponential backoff. Hevy does not
  * document its rate limits, so these choices are defensive guesses.
  */
-public class HevyWorkoutRepository {
+public class HevyApiController {
 
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
@@ -43,7 +43,7 @@ public class HevyWorkoutRepository {
     private final RetrySleeper sleeper;
     private final int maxRateLimitAttempts;
 
-    public HevyWorkoutRepository(RestClient restClient, RetrySleeper sleeper, int maxRateLimitAttempts) {
+    public HevyApiController(RestClient restClient, RetrySleeper sleeper, int maxRateLimitAttempts) {
         this.restClient = restClient;
         this.sleeper = sleeper;
         this.maxRateLimitAttempts = maxRateLimitAttempts;
@@ -51,7 +51,7 @@ public class HevyWorkoutRepository {
 
     /** Every workout of the user, all pages. */
     public List<HevyWorkoutDto> fetchAllWorkouts() {
-        return fetchAllPages(HEVY_WORKOUTS_PATH, Map.of(), "workouts", HevyWorkoutRepository::toWorkout);
+        return fetchAllPages(HEVY_WORKOUTS_PATH, Map.of(), "workouts", HevyApiController::toWorkout);
     }
 
     /**
@@ -60,7 +60,7 @@ public class HevyWorkoutRepository {
      */
     public List<HevyWorkoutEventDto> fetchWorkoutEventsSince(Instant since) {
         return fetchAllPages(HEVY_WORKOUT_EVENTS_PATH, Map.of("since", since.toString()), "events",
-                HevyWorkoutRepository::toEvent);
+                HevyApiController::toEvent);
     }
 
     private <T> List<T> fetchAllPages(String path, Map<String, String> query, String itemsField,

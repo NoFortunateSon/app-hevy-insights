@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.repository;
+package io.github.nofortunateson.hevyinsights.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,13 +37,13 @@ import org.springframework.web.client.RestClient;
  * Contract tests against recorded-shape responses (invented data, schema from the Hevy docs).
  * No real Hevy call.
  */
-class HevyWorkoutRepositoryContractTests {
+class HevyApiControllerContractTests {
 
     private static final String BASE = "https://hevy.test";
     // Not a real key: an all-zero UUID, the format Hevy documents for the header.
     private static final String FAKE_KEY = "00000000-0000-0000-0000-000000000000";
 
-    // From the Hevy spec, not from HevyWorkoutRepository: the contract is what Hevy documents.
+    // From the Hevy spec, not from HevyApiController: the contract is what Hevy documents.
     private static final int HEVY_MAX_PAGE_SIZE = 10;
     private static final Instant SINCE = Instant.parse("2026-10-01T00:00:00Z");
 
@@ -51,11 +51,11 @@ class HevyWorkoutRepositoryContractTests {
 
     private MockRestServiceServer server;
 
-    private HevyWorkoutRepository repository(String key, int maxAttempts) {
+    private HevyApiController controller(String key, int maxAttempts) {
         RestClient.Builder builder = HevyApiConfiguration.restClientBuilder(
                 new HevyApiProperties(URI.create(BASE), key, maxAttempts));
         server = MockRestServiceServer.bindTo(builder).build();
-        return new HevyWorkoutRepository(builder.build(), sleeps::add, maxAttempts);
+        return new HevyApiController(builder.build(), sleeps::add, maxAttempts);
     }
 
     private static String workoutsPage(int page) {
@@ -72,7 +72,7 @@ class HevyWorkoutRepositoryContractTests {
 
     @Test
     void fetchAllWorkoutsWalksEveryPageWithMaxPageSizeAndApiKey() {
-        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
+        HevyApiController controller = controller(FAKE_KEY, 5);
         server.expect(requestTo(workoutsPage(1)))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
@@ -82,7 +82,7 @@ class HevyWorkoutRepositoryContractTests {
                 .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
                 .andRespond(withSuccess(fixture("workouts-page-2.json"), MediaType.APPLICATION_JSON));
 
-        List<HevyWorkoutDto> workouts = repository.fetchAllWorkouts();
+        List<HevyWorkoutDto> workouts = controller.fetchAllWorkouts();
 
         server.verify();
         assertThat(workouts).extracting(HevyWorkoutDto::id).containsExactly("w-0001", "w-0002");
@@ -95,23 +95,23 @@ class HevyWorkoutRepositoryContractTests {
 
     @Test
     void fetchAllWorkoutsStopsAfterOneRequestWhenThereAreNoWorkouts() {
-        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
+        HevyApiController controller = controller(FAKE_KEY, 5);
         server.expect(requestTo(workoutsPage(1)))
                 .andRespond(withSuccess(fixture("workouts-empty.json"), MediaType.APPLICATION_JSON));
 
-        assertThat(repository.fetchAllWorkouts()).isEmpty();
+        assertThat(controller.fetchAllWorkouts()).isEmpty();
         server.verify();
     }
 
     @Test
     void fetchWorkoutEventsSinceMapsUpdatesAndDeletions() {
-        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
+        HevyApiController controller = controller(FAKE_KEY, 5);
         server.expect(requestTo(eventsFirstPage(SINCE)))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(Constants.HEVY_API_KEY_HEADER, FAKE_KEY))
                 .andRespond(withSuccess(fixture("workout-events-page-1.json"), MediaType.APPLICATION_JSON));
 
-        List<HevyWorkoutEventDto> events = repository.fetchWorkoutEventsSince(SINCE);
+        List<HevyWorkoutEventDto> events = controller.fetchWorkoutEventsSince(SINCE);
 
         server.verify();
         assertThat(events).hasSize(3);
@@ -126,7 +126,7 @@ class HevyWorkoutRepositoryContractTests {
 
     @Test
     void rateLimitHonoursRetryAfterSecondsThenSucceeds() {
-        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
+        HevyApiController controller = controller(FAKE_KEY, 5);
         HttpHeaders retryAfter = new HttpHeaders();
         retryAfter.set(HttpHeaders.RETRY_AFTER, "7");
         server.expect(requestTo(workoutsPage(1)))
@@ -134,18 +134,18 @@ class HevyWorkoutRepositoryContractTests {
         server.expect(requestTo(workoutsPage(1)))
                 .andRespond(withSuccess(fixture("workouts-empty.json"), MediaType.APPLICATION_JSON));
 
-        assertThat(repository.fetchAllWorkouts()).isEmpty();
+        assertThat(controller.fetchAllWorkouts()).isEmpty();
         server.verify();
         assertThat(sleeps).containsExactly(Duration.ofSeconds(7));
     }
 
     @Test
     void rateLimitWithoutRetryAfterBacksOffExponentiallyAndGivesUp() {
-        HevyWorkoutRepository repository = repository(FAKE_KEY, 4);
+        HevyApiController controller = controller(FAKE_KEY, 4);
         server.expect(times(4), requestTo(workoutsPage(1)))
                 .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
 
-        assertThatThrownBy(repository::fetchAllWorkouts)
+        assertThatThrownBy(controller::fetchAllWorkouts)
                 .isInstanceOf(HevyRateLimitExceededException.class)
                 .extracting(e -> ((HevyApiException) e).statusCode()).isEqualTo(OptionalInt.of(429));
         server.verify();
@@ -155,11 +155,11 @@ class HevyWorkoutRepositoryContractTests {
 
     @Test
     void errorStatusFailsWithoutLeakingTheKey() {
-        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
+        HevyApiController controller = controller(FAKE_KEY, 5);
         server.expect(requestTo(workoutsPage(1)))
                 .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
 
-        assertThatThrownBy(repository::fetchAllWorkouts)
+        assertThatThrownBy(controller::fetchAllWorkouts)
                 .isInstanceOf(HevyApiException.class)
                 .hasMessageContaining("401")
                 .hasMessageNotContaining(FAKE_KEY)
@@ -169,10 +169,10 @@ class HevyWorkoutRepositoryContractTests {
 
     @Test
     void missingKeyFailsBeforeAnyRequest() {
-        HevyWorkoutRepository repository = repository("  ", 5);
+        HevyApiController controller = controller("  ", 5);
         server.expect(never(), anything());
 
-        assertThatThrownBy(repository::fetchAllWorkouts)
+        assertThatThrownBy(controller::fetchAllWorkouts)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Hevy API key missing: set HEVY_API_KEY");
         server.verify();
@@ -180,12 +180,12 @@ class HevyWorkoutRepositoryContractTests {
 
     @Test
     void unknownEventTypeIsRejected() {
-        HevyWorkoutRepository repository = repository(FAKE_KEY, 5);
+        HevyApiController controller = controller(FAKE_KEY, 5);
         server.expect(requestTo(eventsFirstPage(Instant.EPOCH)))
                 .andRespond(withSuccess("{\"page\":1,\"page_count\":1,\"events\":[{\"type\":\"merged\"}]}",
                         MediaType.APPLICATION_JSON));
 
-        assertThatThrownBy(() -> repository.fetchWorkoutEventsSince(Instant.EPOCH))
+        assertThatThrownBy(() -> controller.fetchWorkoutEventsSince(Instant.EPOCH))
                 .isInstanceOf(HevyApiException.class)
                 .hasMessageContaining("merged")
                 .extracting(e -> ((HevyApiException) e).statusCode()).isEqualTo(OptionalInt.empty());
@@ -200,8 +200,8 @@ class HevyWorkoutRepositoryContractTests {
 
     @Test
     void retryAfterIsCappedAndMalformedValuesFallBackToBackoff() {
-        assertThat(HevyWorkoutRepository.retryDelay("3600", 1)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
-        assertThat(HevyWorkoutRepository.retryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 2)).isEqualTo(Duration.ofSeconds(2));
-        assertThat(HevyWorkoutRepository.retryDelay(null, 30)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
+        assertThat(HevyApiController.retryDelay("3600", 1)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
+        assertThat(HevyApiController.retryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 2)).isEqualTo(Duration.ofSeconds(2));
+        assertThat(HevyApiController.retryDelay(null, 30)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
     }
 }

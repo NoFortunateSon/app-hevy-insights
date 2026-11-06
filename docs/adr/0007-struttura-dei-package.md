@@ -20,9 +20,9 @@ Deciso da Alessio il 2026-11-06: **opzione 3**.
 | Package | Contenuto |
 |---|---|
 | (radice) | `HevyInsightsApplication`, la classe `main` |
-| `controller` | Riceve le richieste HTTP, valida l'input, restituisce le risposte; smista verso i service. |
+| `controller` | Confine HTTP dell'app: espone i service (riceve le richieste, valida l'input, restituisce le risposte) e parla con l'API Hevy (`HevyApiController`). |
 | `service` | Logica di business: elabora i dati dei controller, coordina i repository. |
-| `repository` | Accesso ai dati e persistenza: database **e altre fonti dati**. Qui sta `HevyWorkoutRepository`. |
+| `repository` | Solo accesso al database. |
 | `exception` | Tutte le eccezioni. |
 | `config` | Configurazioni Spring e proprietà di configurazione. |
 | `model`, `model/dto` | Modelli; i DTO nella sottocartella `dto` (per ora `HevyWorkoutDto`, `HevyWorkoutEventDto`). |
@@ -35,15 +35,17 @@ Regole di dipendenza (controllate da `LayerDependencyTests`):
 - `config` e `security` possono usare tutti i livelli (servono a collegarli).
 
 Scelte di Claude nell'applicare la decisione (da correggere se Alessio non è d'accordo):
-- `HevyWorkoutRepository` in `repository`: è una fonte dati, come dice la definizione del livello.
+- Client dell'API Hevy: deciso da Alessio il 2026-11-06 (issue #24), dopo una prima collocazione in `repository`: si chiama `HevyApiController` e sta in `controller`, perché il repository è solo database. **La sync parte da `HevyApiController`**: legge da Hevy e passa i dati a un service, che li salva tramite un repository. Così il verso `controller` → `service` → `repository` resta valido.
+  - Nota tecnica (di Claude): in Spring "controller" indica di solito una classe che *riceve* richieste HTTP (`@RestController`); `HevyApiController` invece *invia* richieste a Hevy e non è un endpoint REST. Il nome segue la scelta di Alessio.
+  - Conseguenza: la parte della logica che collega Hevy e database (quando leggere, cosa passare al service) sta nel controller, non solo nel service.
 - `HevyWorkoutDto` e `HevyWorkoutEventDto` in `model/dto`: sono dati che arrivano da Hevy.
 - Model o DTO: un **model** è un dato nostro (riga di una tabella, oggetto di dominio con le sue regole); un **DTO** trasporta dati attraverso un confine (da Hevy, o verso l'esterno via REST), non ha logica e il nome finisce in `Dto`. Per questo i dati di Hevy sono DTO; il primo model sarà la riga di `hevy_workout_raw`.
 - Nomi delle classi (issue #24): ogni classe dice il suo ruolo (`...Repository`, `...Configuration`, `...Dto`, `...Exception`).
-- In `Constants` vanno i valori fissi del client Hevy (header, dimensione pagina, percorsi, attese dopo un 429). I nomi dei campi JSON di Hevy restano in `HevyWorkoutRepository`, l'unica classe che legge quel JSON.
+- In `Constants` vanno i valori fissi del client Hevy (header, dimensione pagina, percorsi, attese dopo un 429). I nomi dei campi JSON di Hevy restano in `HevyApiController`, l'unica classe che legge quel JSON.
 
 ## Conseguenze
-- Regola 2 delle linee guida e regola di `CLAUDE.md` sulla forma dell'API Hevy: il JSON di Hevy lo legge solo `HevyWorkoutRepository`; header, percorsi e dimensione pagina stanno in `utils.Constants`. La conoscenza di Hevy è quindi in due punti invece che in uno: è il costo accettato di questa struttura.
+- Regola 2 delle linee guida e regola di `CLAUDE.md` sulla forma dell'API Hevy: il JSON di Hevy lo legge solo `HevyApiController`; header, percorsi e dimensione pagina stanno in `utils.Constants`. La conoscenza di Hevy è quindi in due punti invece che in uno: è il costo accettato di questa struttura.
 - Regola 3: un service che inoltra soltanto a un repository è accettato come costo dei livelli. Se succede per molte funzioni, se ne riparla in un nuovo ADR.
-- Diverse classi che prima erano visibili solo nel loro package ora sono `public` (costruttore di `HevyWorkoutRepository`, eccezioni, `RetrySleeper`, `HevyApiProperties.hasKey()`), perché lavorano tra package diversi.
+- Diverse classi che prima erano visibili solo nel loro package ora sono `public` (costruttore di `HevyApiController`, eccezioni, `RetrySleeper`, `HevyApiProperties.hasKey()`), perché lavorano tra package diversi.
 - Il controllo delle dipendenze è testuale (import e nomi completi), senza librerie nuove. Una libreria dedicata (ArchUnit, Spring Modulith) sarebbe una nuova dipendenza: serve un ADR.
 - Aggiornati `CLAUDE.md` (Architecture, Testing), `README.md`, `docs/linee-guida.md` (regole 2 e 3), `docs/STATO.md`, nota nell'ADR 0003. Gli ADR 0003 e 0005 non si riscrivono: i nomi `hevyclient` e `sync` lì sono storici.
