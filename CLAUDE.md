@@ -11,9 +11,9 @@ The decision record is `docs/adr/0003-primo-progetto-hevy-insights.md` (written 
 - Everything you say to Alessio in chat: Italian, direct, no filler. Separate facts, opinions and hypotheses. Never invent data: if something is missing, ask.
 
 ## Working rules (non-negotiable)
-- Never commit to `main`. GitHub does not enforce this on this private repo (free plan), so you must. Work only on branches named `claude/<issue>-<topic>` and open a pull request.
+- Never commit to `main`. The repository is public and the `protect-main` ruleset enforces it (PR only, CI job `build` green, no force push; ADR 0012). Work only on branches named `claude/<issue>-<topic>` and open a pull request using the PR template.
 - A PR is not ready unless the CI is green. Every change comes with tests.
-- Never write secrets, tokens, API keys or `.env` files to the repo, logs, tests or PR text. Only `.env.example` with empty placeholders.
+- Never write secrets, tokens, API keys, personal data or `.env` files to the repo, logs, tests, issues or PR text: the repository, its history and its Actions logs are public. Only `.env.example` with empty placeholders.
 - Non-trivial choices (new library, new dependency, data model change, anything costly to undo) are not yours to decide: write a proposal as a new ADR in `docs/adr/` with status `Proposta` (sections: Contesto, Opzioni, Decisione left empty, Conseguenze) and ask Alessio.
 - Versions, APIs and prices change: verify them online before using them. Do not rely on memory.
 - Do not delete files you did not create. Do not rewrite history.
@@ -59,4 +59,5 @@ Put new classes in the package of their type; do not create other top-level pack
 
 ## Open points (do not decide alone)
 - How Claude is integrated (MCP server, Anthropic API, or chat only): a later ADR.
+- Frontend: a separate application calling the REST API; the backend stays a monolith, no gateway, no microservices for now (ADR 0013). Its technology and hosting are a later ADR.
 - Where it runs: locally for development; with the PC off, the sync runs on a scheduled GitHub Actions workflow (`.github/workflows/hevy-sync.yml`) against a Neon free Postgres (ADR 0010). Where a future REST API runs: a later ADR.

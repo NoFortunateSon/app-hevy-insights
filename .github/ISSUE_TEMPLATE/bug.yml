@@ -1,0 +1,22 @@
+name: Bug
+description: Something does not work as expected
+title: "[Bug] "
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Observed behaviour, with the exact error text. Never paste secrets or the Hevy API key.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Steps, command, or workflow run link.
