@@ -2,12 +2,12 @@ package io.github.nofortunateson.hevyinsights.exception;
 
 import java.util.OptionalInt;
 
-/** Hevy answered with an unexpected status or a body the client cannot read. */
+/** Hevy answered with an unexpected status or a body this application cannot read. */
 public class HevyApiException extends RuntimeException {
 
     private final OptionalInt statusCode;
 
-    /** The response arrived but its content is not what the client expects. */
+    /** The response arrived but its content is not what this application expects. */
     public HevyApiException(String message) {
         super(message);
         this.statusCode = OptionalInt.empty();
@@ -18,7 +18,7 @@ public class HevyApiException extends RuntimeException {
         this.statusCode = OptionalInt.empty();
     }
 
-    /** Hevy answered with an HTTP status the client does not accept. */
+    /** Hevy answered with an HTTP status this application does not accept. */
     public HevyApiException(String message, int statusCode) {
         super(message);
         this.statusCode = OptionalInt.of(statusCode);

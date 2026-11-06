@@ -1,8 +1,5 @@
 /**
- * Repository layer: data access. The Postgres tables (schema in {@code db/migration}) and the Hevy public API
- * as a read-only data source.
- * <p>
- * {@link io.github.nofortunateson.hevyinsights.repository.HevyClient} is the only class that reads Hevy's JSON,
- * because Hevy may change or drop the API. Never calls create or update endpoints on Hevy.
+ * Repository layer: database access only (Postgres tables, schema in {@code db/migration}).
+ * No HTTP, no business logic. Never calls services or controllers.
  */
 package io.github.nofortunateson.hevyinsights.repository;

@@ -12,7 +12,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | Dependabot per Maven e GitHub Actions | #10 | CI verde |
 | Flyway, Testcontainers, tabella `hevy_workout_raw` (V1), ADR 0005 (accettata) | #12 | CI verde sulla PR e su `main`; 7 test in locale secondo la descrizione della PR |
 | Regola del file di stato, `docs/STATO.md` | #16 | Solo documentazione |
-| `HevyClient` in sola lettura (workout ed eventi, paginazione, retry su 429), contract test; README, `.gitattributes` | #15 | CI verde sulla PR e su `main` (run 42256422866) |
+| Client Hevy (`HevyClient`) in sola lettura (workout ed eventi, paginazione, retry su 429), contract test; README, `.gitattributes` | #15 | CI verde sulla PR e su `main` (run 42256422866) |
 | Linee guida di codice `docs/linee-guida.md`, ADR 0006 proposta | #18 | CI verde su `main` (run 42257789483) |
 | ADR 0006 accettata (opzione 3, ibrida), regola 18, client Hevy adeguato alle linee guida (`HevyApiException.statusCode()` ora `OptionalInt`) | #20 | CI verde sulla PR (run 42258472439) e su `main` (run 42260149343) |
 
@@ -34,7 +34,9 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": i tempi di recupero tra le serie non ci sono nei workout; va ridefinita o tolta (decisione di Alessio).
 
 ## In corso
-- Issue #21, PR #23, branch `claude/21-three-layer`: ADR 0007 accettata, struttura classica di Spring: `controller` → `service` → `repository`, più `exception`, `config`, `model` (`dto`), `security`, `utils` (`Constants`). `HevyClient` sta in `repository`, i DTO Hevy in `model/dto`. `LayerDependencyTests` controlla il verso delle dipendenze sul testo dei sorgenti (provato con una violazione voluta: il test fallisce). 19 test verdi in locale; CI: vedi i check della PR. Prestazioni: nessun costo a runtime atteso dai package (non misurato). Nota: la PR #22 è stata mergiata nel branch della #20 invece che in `main`; la #23 porta tutto su `main`.
+- Issue #21, PR #23, branch `claude/21-three-layer`: ADR 0007 accettata, struttura classica di Spring: `controller` → `service` → `repository`, più `exception`, `config`, `model` (`dto`), `security`, `utils` (`Constants`). `HevyApiController` sta in `repository`, i DTO Hevy in `model/dto`. `LayerDependencyTests` controlla il verso delle dipendenze sul testo dei sorgenti (provato con una violazione voluta: il test fallisce). 19 test verdi in locale; CI: vedi i check della PR. Prestazioni: nessun costo a runtime atteso dai package (non misurato). Nota: la PR #22 è stata mergiata nel branch della #20 invece che in `main`; la #23 porta tutto su `main`.
+
+- Issue #24, branch `claude/24-rename-classes` (parte dal branch della #23): classi rinominate per ruolo: `HevyClient` → `HevyApiController` (spostato da `repository` a `controller`: il repository è solo database; la sync partirà dal controller, ADR 0007), `HevyClientConfiguration` → `HevyApiConfiguration`, `HevyWorkout` → `HevyWorkoutDto`, `HevyWorkoutEvent` → `HevyWorkoutEventDto`, `HevyRateLimitedException` → `HevyRateLimitExceededException`, `Sleeper` → `RetrySleeper`. Criterio model/DTO scritto in ADR 0007 e `CLAUDE.md`. Nessun cambio di comportamento.
 
 ## Decisioni in attesa di Alessio
 - Nessuna ADR in stato `Proposta` (la 0006 è decisa: opzione 3).

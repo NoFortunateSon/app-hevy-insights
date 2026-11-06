@@ -30,14 +30,14 @@ Livelli classici di Spring (ADR 0007): `controller` → `service` → `repositor
 | Package | Cosa contiene | Oggi |
 |---|---|---|
 | (radice) | La classe `main` | `HevyInsightsApplication` |
-| `controller` | Richieste HTTP, validazione, risposte (REST in sola lettura) | Vuoto |
+| `controller` | Confine HTTP: espone i service (REST in sola lettura) e parla con l'API Hevy | `HevyApiController` (API Hevy in sola lettura) |
 | `service` | Logica di business: sync incrementale, metriche | Vuoto |
-| `repository` | Accesso ai dati: Postgres e API Hevy (sola lettura) | `HevyClient`; tabella `hevy_workout_raw` (migrazione V1) |
-| `exception` | Tutte le eccezioni | `HevyApiException`, `HevyRateLimitedException` |
-| `config` | Configurazioni | `HevyClientConfiguration`, `HevyApiProperties` |
-| `model`, `model/dto` | Modelli; DTO nella sottocartella | `HevyWorkout`, `HevyWorkoutEvent` (DTO) |
+| `repository` | Solo accesso al database | Nessuna classe; tabella `hevy_workout_raw` (migrazione V1) |
+| `exception` | Tutte le eccezioni | `HevyApiException`, `HevyRateLimitExceededException` |
+| `config` | Configurazioni | `HevyApiConfiguration`, `HevyApiProperties` |
+| `model`, `model/dto` | Modelli; DTO nella sottocartella | `HevyWorkoutDto`, `HevyWorkoutEventDto` (DTO) |
 | `security` | Sicurezza | Vuoto |
-| `utils` | `Constants` e classi che non rientrano altrove | `Constants`, `Sleeper` |
+| `utils` | `Constants` e classi che non rientrano altrove | `Constants`, `RetrySleeper` |
 
 Migrazioni Flyway in `src/main/resources/db/migration`. Una migrazione già applicata non si modifica: se ne aggiunge una nuova.
 
