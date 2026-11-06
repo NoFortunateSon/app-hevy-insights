@@ -1,0 +1,23 @@
+name: Task
+description: A piece of work for this project
+title: "[Task] "
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be true when this is done, and why.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How we check it is done (tests, behaviour, docs).
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Related ADRs, constraints, open questions.

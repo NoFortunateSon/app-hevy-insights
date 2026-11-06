@@ -1,0 +1,19 @@
+name: Dependency review
+
+# On every PR: fails if the PR adds a dependency with a known vulnerability of high severity or worse
+# (free on public repositories; ADR 0012).
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
