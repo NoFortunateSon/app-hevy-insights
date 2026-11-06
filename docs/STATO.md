@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR #16). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR #15). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -11,25 +11,29 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | ADR 0004: Flyway + Testcontainers (accettata) | #6, #8 | CI verde |
 | Dependabot per Maven e GitHub Actions | #10 | CI verde |
 | Flyway, Testcontainers, tabella `hevy_workout_raw` (V1), ADR 0005 (accettata) | #12 | CI verde sulla PR e su `main`; 7 test in locale secondo la descrizione della PR |
+| Regola del file di stato, `docs/STATO.md` | #16 | Solo documentazione |
 
 ## Verificato
 - La CI usa Testcontainers con Postgres 18.6 sul runner GitHub (`ubuntu-latest`): funziona (run della PR #12).
 - `flyway-database-postgresql` va dichiarato a parte (versione dal BOM di Boot): verificato nell'ADR 0005.
+- API Hevy, dalla spec OpenAPI in `https://api.hevyapp.com/docs/swagger-ui-init.js` (letta il 2026-11-06): header `api-key`; `GET /v1/workouts` e `GET /v1/workouts/events` con `page` e `pageSize` (massimo 10); gli eventi hanno `since` e sono di tipo `updated` (workout completo) o `deleted` (`id`, `deleted_at` facoltativo), dal più recente.
+- I workout dell'API **non** hanno tempi di recupero: `rest_seconds` esiste solo nelle routine (stessa spec).
 
 ## Non verificato / da fare
-- Modulo `hevyclient` (issue #13): non iniziato su `main`; l'ADR per sync incrementale (endpoint eventi o elenco completo) non esiste ancora.
+- Limiti di frequenza di Hevy: non documentati (niente 429 né `Retry-After` nella spec). La gestione del 429 nella PR #15 è difensiva, non provata contro Hevy.
+- Nessuna chiamata alla vera API Hevy finora: forma delle risposte verificata solo sulla spec, non su dati reali.
+- ADR 0001 e 0002 del workspace, citate in `CLAUDE.md`: non presenti nel repo `workspace-docs` (su `origin/main` c'è solo il README, controllato il 2026-11-06).
 - Maven wrapper (`mvnw`) assente.
-- README ancora minimo.
 - Da dove arriva l'UUID dell'unico utente (configurazione o costante): da decidere.
 - Gestione dei workout cancellati su Hevy: da decidere.
 - Spring Modulith / Spring AI: versione non ancora fissata nel `pom.xml`.
-- Recupero tra le serie: non sappiamo se l'API lo espone (serve la chiave Hevy e i dati reali).
+- Metrica "recovery": i tempi di recupero tra le serie non ci sono nei workout; va ridefinita o tolta (decisione di Alessio).
 
 ## In corso
-- Issue #13 `hevyclient`: PR #15 aperta (non letta nel dettaglio da questa PR).
+- PR #15 (issue #13), branch `claude/13-hevyclient-workouts`: `HevyClient` in sola lettura (workout ed eventi, paginazione, retry su 429), contract test con dati inventati; README riscritto, `.gitattributes` (LF), questo file. 17 test verdi in locale con `mvn verify`; CI: vedi i check della PR.
 
 ## Decisioni in attesa di Alessio
-- Nessuna ADR in stato `Proposta` al momento.
+- Nessuna ADR in stato `Proposta` al momento. Prossima proposta prevista: design della sync (caricamento completo + eventi, punto di ripartenza, cancellazioni, UUID utente, recovery).
 
 ## Per il coordinatore
 - Nessuna richiesta.
