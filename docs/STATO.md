@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #36). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #38). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -40,9 +40,10 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 
 ## In corso
 - Issue #36, branch `claude/36-load-dotenv`: l'app legge `.env` della cartella del progetto se esiste (`spring.config.import: optional:file:${HEVY_INSIGHTS_ENV_FILE:.env}[.properties]`); le variabili d'ambiente vere vincono (verificato sulla documentazione di Spring Boot 4.1.2). I test non leggono mai `.env` (Surefire punta `HEVY_INSIGHTS_ENV_FILE` a un file inesistente). Verificato: 44 test verdi in locale; avvio del jar con il `.env` di Alessio e sync spenta, porta 8099: health `UP`, Flyway "Schema is up to date". Effetto collaterale: la migrazione V2 è stata applicata al database locale di Alessio. CI: vedi i check della PR.
-- Prossimo passo concordato: un ambiente di esecuzione dove impostare le variabili (non deciso quale).
+- Issue #38, branch `claude/38-adr-run-environment` (parte dal branch della #37): ADR 0010 `Proposta`, ambiente gratuito attivo a PC spento. Solo documentazione.
 
 ## Decisioni in attesa di Alessio
+- **ADR 0010 `Proposta` (issue #38): dove far girare l'app a PC spento, gratis.** Opzioni verificate sulle pagine ufficiali del 2026-11-06: VM Oracle Always Free (rischio di recupero per inattività), GitHub Actions pianificato + Postgres Neon (raccomandata da Claude; niente API REST sempre accesa), VM Google `e2-micro` (risorse ridotte). Scartati Render, Fly.io, Koyeb, Supabase.
 - La sync parte da `HevySyncController` (classe nuova) invece che da `HevyApiController`, per la regola 19: da confermare, oppure si accorpano (ADR 0008, sezione Implementazione).
 - Classi di supporto di `controller/hevy` `public` invece che package-private: Java non permette altro finché `HevyApiController` sta in `controller` (dettagli nell'ADR 0007, esito dell'issue #27). Da confermare, oppure spostare `HevyApiController` in `controller/hevy`.
 
