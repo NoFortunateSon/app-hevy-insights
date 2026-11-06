@@ -1,10 +1,12 @@
 name: Mutation testing
 
 # PIT changes the code on purpose and checks that some test fails (ADR 0011). A full run takes about
-# 8 minutes, so it runs weekly and on demand instead of on every PR, to save the free CI minutes that the
-# Hevy sync also needs (ADR 0010). The HTML report is attached to the run as an artifact.
+# 8 minutes. Since the repository is public, Actions minutes are unlimited, so it runs on every pull
+# request as well as weekly and on demand (ADR 0011, addendum of 2026-11-07). It fails if fewer than 90%
+# of mutations are killed. The HTML report is attached to the run as an artifact.
 
 on:
+  pull_request:
   schedule:
     - cron: '41 3 * * 1'  # Mondays 03:41 UTC
   workflow_dispatch:

@@ -23,7 +23,8 @@ jobs:
           cache: maven
       - name: Build and test (with JaCoCo coverage)
         run: mvn --batch-mode --no-transfer-progress verify
-      # ADR 0011. Skipped until Alessio sets the SONAR_TOKEN secret and the SONAR_ORGANIZATION and
+      # ADR 0011. The step waits for the quality gate and fails the job if it fails (addendum, 2026-11-07).
+      # Skipped until Alessio sets the SONAR_TOKEN secret and the SONAR_ORGANIZATION and
       # SONAR_PROJECT_KEY repository variables; always skipped on Dependabot PRs, which get no secrets.
       - name: SonarQube Cloud analysis
         env:
@@ -38,4 +39,5 @@ jobs:
           mvn --batch-mode --no-transfer-progress org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization="$SONAR_ORGANIZATION" \
-            -Dsonar.projectKey="$SONAR_PROJECT_KEY"
+            -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+            -Dsonar.qualitygate.wait=true
