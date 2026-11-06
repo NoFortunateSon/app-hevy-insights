@@ -19,7 +19,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | Classi rinominate per ruolo; client Hevy = `controller/HevyApiController` (il repository è solo database); criterio model/DTO | #25 | CI verde su `main` (run 42265157454) |
 | Regola 19 "una classe, un compito", aggiunta all'ADR 0007 | #28 | CI verde su `main` (run 42266731836) |
 | `HevyApiController` diviso per compiti: `controller/hevy` (`HevyHttpClient`, `HevyPageWalker`, `HevyResponseMapper`), `utils/RateLimitRetryPolicy`; nessun cambio di comportamento | #29 | CI verde sulla PR (run 42268241973) e su `main` (run 42269874487); 34 test in locale |
-| ADR 0008 `Proposta`: design della sync | #31 | CI verde su `main` (run 42270489208); solo documentazione |
+| ADR 0008 proposta: design della sync | #31 | CI verde su `main` (run 42270489208); solo documentazione |
 
 ## Verificato
 - La CI usa Testcontainers con Postgres 18.6 sul runner GitHub (`ubuntu-latest`): funziona (run della PR #12).
@@ -37,10 +37,9 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #32, branch `claude/32-sync-answers-jpa`: nell'ADR 0008 le indicazioni di Alessio sui punti non documentati da Hevy e sul recupero; ADR 0009 accettata (JPA; starter verificati nel BOM di Boot 4.1.2, Hibernate 7.4.13.Final; dipendenze da aggiungere con la sync). Solo documentazione. Nota: la PR #31 era già mergiata quando questo commit è stato pubblicato, da qui la nuova issue.
+- Issue #32, PR #33, branch `claude/32-sync-answers-jpa`: ADR 0008 **accettata** (raccomandazioni: A1 primo carico + eventi, B1 tabella `hevy_sync_state`, C1 cancellazione logica, D1 UUID da configurazione, E1+E2 all'avvio e periodica); nell'ADR 0008 le indicazioni di Alessio sui punti non documentati da Hevy e sul recupero; ADR 0009 accettata (JPA; starter verificati nel BOM di Boot 4.1.2, Hibernate 7.4.13.Final; dipendenze da aggiungere con la sync). Solo documentazione. Nota: la PR #31 era già mergiata quando questo commit è stato pubblicato, da qui la nuova issue.
 
 ## Decisioni in attesa di Alessio
-- **ADR 0008 `Proposta` (issue #30): design della sync.** Cinque scelte (A-E): strategia di caricamento, punto di ripartenza, cancellazioni, UUID dell'unico utente, chi fa partire la sync. Raccomandazioni di Claude nell'ADR; la Decisione è vuota. Alessio ha già dato le indicazioni sui punti non documentati da Hevy (vedi sotto).
 - Classi di supporto di `controller/hevy` `public` invece che package-private: Java non permette altro finché `HevyApiController` sta in `controller` (dettagli nell'ADR 0007, esito dell'issue #27). Da confermare, oppure spostare `HevyApiController` in `controller/hevy`.
 
 ## Per il coordinatore

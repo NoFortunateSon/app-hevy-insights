@@ -1,6 +1,6 @@
 # 0008 - Design della sync con Hevy
 
-Stato: Proposta
+Stato: Accettata
 Data: 2026-11-06
 
 ## Contesto
@@ -78,10 +78,14 @@ Raccomandazione di Claude: **1 e 2 insieme** (all'avvio e poi periodica), senza 
 - **Metrica "recovery"**: Alessio indica che Hevy ha il tempo di recupero. Nella spec di oggi il workout non ha un campo di recupero; `rest_seconds` c'è solo negli esercizi delle routine (recupero *pianificato*, non quello fatto). Due ipotesi da verificare sul JSON reale, che salviamo intero: (a) l'API restituisce campi non documentati nella spec; (b) il recupero si ricava dalla routine collegata (`routine_id`). Si decide nell'ADR delle metriche.
 
 ## Decisione
-(da compilare da Alessio)
+Deciso da Alessio il 2026-11-06: **le raccomandazioni di Claude**.
+- **A1**: primo carico completo con `/v1/workouts`, poi solo `/v1/workouts/events` dal punto di ripartenza. La ricarica completa (A3) resta possibile come operazione manuale di emergenza.
+- **B1**: tabella `hevy_sync_state` con l'ora di inizio dell'ultima sync riuscita.
+- **C1**: cancellazione logica, colonna `deleted_at` in `hevy_workout_raw`.
+- **D1**: UUID dell'utente da proprietà di configurazione `hevy-insights.user-id`.
+- **E1 + E2**: la sync parte all'avvio dell'app e poi periodicamente da `HevyApiController`, a un minuto non tondo; nessun endpoint REST.
 
 ## Conseguenze
-Valgono se si scelgono le raccomandazioni; con altre scelte cambiano di conseguenza.
 - Migrazione V2: tabella `hevy_sync_state` e colonna `deleted_at` in `hevy_workout_raw`. La V1 non si tocca (ADR 0004).
 - Nuove classi, una per compito (regola 19), nei package dell'ADR 0007:
   - `controller`: in `HevyApiController` il punto d'avvio della sync (all'avvio e periodico), che legge da Hevy e passa i DTO al service;
