@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #34). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #36). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -20,6 +20,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | Regola 19 "una classe, un compito", aggiunta all'ADR 0007 | #28 | CI verde su `main` (run 42266731836) |
 | `HevyApiController` diviso per compiti: `controller/hevy` (`HevyHttpClient`, `HevyPageWalker`, `HevyResponseMapper`), `utils/RateLimitRetryPolicy`; nessun cambio di comportamento | #29 | CI verde sulla PR (run 42268241973) e su `main` (run 42269874487); 34 test in locale |
 | ADR 0008 proposta: design della sync | #31 | CI verde su `main` (run 42270489208); solo documentazione |
+| ADR 0008 accettata (A1 B1 C1 D1 E1+E2), indicazioni di Alessio sui punti non documentati; ADR 0009 accettata (JPA) | #33 | Solo documentazione |
+| Sync con Hevy: JPA, migrazione V2, `HevySyncService`, `HevySyncController` (all'avvio e ogni 6 ore) | #35 | CI verde sulla PR (run 42274015768); 41 test in locale. Mai eseguita contro la vera API Hevy |
 
 ## Verificato
 - La CI usa Testcontainers con Postgres 18.6 sul runner GitHub (`ubuntu-latest`): funziona (run della PR #12).
@@ -32,14 +34,13 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Limiti di frequenza di Hevy: non documentati (niente 429 né `Retry-After` nella spec). La gestione del 429 nella PR #15 è difensiva, non provata contro Hevy.
 - Nessuna chiamata alla vera API Hevy finora (la sync è pronta ma non è mai stata eseguita sui dati reali): forma delle risposte verificata solo sulla spec, non su dati reali. Non documentati dalla spec; indicazioni di Alessio del 2026-11-06 usate come base, da confermare sui dati reali: `since` si confronta con la data della modifica; eventi tenuti 10 anni (per ora); `updated_at` cambia a ogni modifica; id utente Hevy stabile (per ora).
 - ADR 0001 e 0002 del workspace, citate in `CLAUDE.md`: non presenti nel repo `workspace-docs` (su `origin/main` c'è solo il README, controllato il 2026-11-06).
-- L'app non legge il file `.env`: per avviarla in locale le variabili (`HEVY_API_KEY`, `HEVY_INSIGHTS_DB_PASSWORD`) vanno impostate a mano. Proposte due soluzioni ad Alessio, nessuna scelta.
 - Maven wrapper (`mvnw`) assente.
 - Spring Modulith / Spring AI: versione non ancora fissata nel `pom.xml`.
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #34, branch `claude/34-hevy-sync` (parte dal branch della #33): **sync con Hevy** secondo ADR 0008 e 0009. Starter JPA; migrazione V2 (`hevy_sync_state`, `deleted_at`); entità `HevyWorkoutRaw`, `HevySyncState`; repository JPA; `HevySyncService`; `HevySyncController` (all'avvio dopo 30 s, poi ogni 6 ore). Eventi applicati dal più vecchio; punto di ripartenza spostato solo a sync riuscita. 41 test verdi in locale con `mvn verify` (6 di integrazione sulla sync con Postgres reale e risposte Hevy registrate; verificato che il test sull'ordine degli eventi fallisce se si toglie l'inversione); CI: vedi i check della PR. **Mai eseguita contro la vera API Hevy.**
-- Issue #32, PR #33, branch `claude/32-sync-answers-jpa`: ADR 0008 **accettata** (raccomandazioni: A1 primo carico + eventi, B1 tabella `hevy_sync_state`, C1 cancellazione logica, D1 UUID da configurazione, E1+E2 all'avvio e periodica); nell'ADR 0008 le indicazioni di Alessio sui punti non documentati da Hevy e sul recupero; ADR 0009 accettata (JPA; starter verificati nel BOM di Boot 4.1.2, Hibernate 7.4.13.Final; dipendenze da aggiungere con la sync). Solo documentazione. Nota: la PR #31 era già mergiata quando questo commit è stato pubblicato, da qui la nuova issue.
+- Issue #36, branch `claude/36-load-dotenv`: l'app legge `.env` della cartella del progetto se esiste (`spring.config.import: optional:file:${HEVY_INSIGHTS_ENV_FILE:.env}[.properties]`); le variabili d'ambiente vere vincono (verificato sulla documentazione di Spring Boot 4.1.2). I test non leggono mai `.env` (Surefire punta `HEVY_INSIGHTS_ENV_FILE` a un file inesistente). Verificato: 44 test verdi in locale; avvio del jar con il `.env` di Alessio e sync spenta, porta 8099: health `UP`, Flyway "Schema is up to date". Effetto collaterale: la migrazione V2 è stata applicata al database locale di Alessio. CI: vedi i check della PR.
+- Prossimo passo concordato: un ambiente di esecuzione dove impostare le variabili (non deciso quale).
 
 ## Decisioni in attesa di Alessio
 - La sync parte da `HevySyncController` (classe nuova) invece che da `HevyApiController`, per la regola 19: da confermare, oppure si accorpano (ADR 0008, sezione Implementazione).
