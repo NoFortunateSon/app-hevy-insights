@@ -1,5 +1,16 @@
-package io.github.nofortunateson.hevyinsights.data.hevy;
+package io.github.nofortunateson.hevyinsights.repository;
 
+import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_INITIAL_BACKOFF;
+import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_MAX_BACKOFF;
+import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_PAGE_SIZE;
+import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_WORKOUTS_PATH;
+import static io.github.nofortunateson.hevyinsights.utils.Constants.HEVY_WORKOUT_EVENTS_PATH;
+
+import io.github.nofortunateson.hevyinsights.exception.HevyApiException;
+import io.github.nofortunateson.hevyinsights.exception.HevyRateLimitedException;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkout;
+import io.github.nofortunateson.hevyinsights.model.dto.HevyWorkoutEvent;
+import io.github.nofortunateson.hevyinsights.utils.Sleeper;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -26,19 +37,13 @@ import tools.jackson.databind.json.JsonMapper;
  */
 public class HevyClient {
 
-    /** Maximum allowed by Hevy for workouts and workout events. */
-    static final int PAGE_SIZE = 10;
-
-    static final Duration INITIAL_BACKOFF = Duration.ofSeconds(1);
-    static final Duration MAX_BACKOFF = Duration.ofSeconds(60);
-
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private final RestClient restClient;
     private final Sleeper sleeper;
     private final int maxRateLimitAttempts;
 
-    HevyClient(RestClient restClient, Sleeper sleeper, int maxRateLimitAttempts) {
+    public HevyClient(RestClient restClient, Sleeper sleeper, int maxRateLimitAttempts) {
         this.restClient = restClient;
         this.sleeper = sleeper;
         this.maxRateLimitAttempts = maxRateLimitAttempts;
@@ -46,7 +51,7 @@ public class HevyClient {
 
     /** Every workout of the user, all pages. */
     public List<HevyWorkout> fetchAllWorkouts() {
-        return fetchAllPages("/v1/workouts", Map.of(), "workouts", HevyClient::toWorkout);
+        return fetchAllPages(HEVY_WORKOUTS_PATH, Map.of(), "workouts", HevyClient::toWorkout);
     }
 
     /**
@@ -54,7 +59,7 @@ public class HevyClient {
      * them (documented as newest first).
      */
     public List<HevyWorkoutEvent> fetchWorkoutEventsSince(Instant since) {
-        return fetchAllPages("/v1/workouts/events", Map.of("since", since.toString()), "events",
+        return fetchAllPages(HEVY_WORKOUT_EVENTS_PATH, Map.of("since", since.toString()), "events",
                 HevyClient::toEvent);
     }
 
@@ -94,7 +99,7 @@ public class HevyClient {
                 .uri(builder -> {
                     builder.path(path)
                             .queryParam("page", page)
-                            .queryParam("pageSize", PAGE_SIZE);
+                            .queryParam("pageSize", HEVY_PAGE_SIZE);
                     query.forEach(builder::queryParam);
                     return builder.build();
                 })
@@ -135,15 +140,15 @@ public class HevyClient {
     }
 
     private static Duration exponentialBackoff(int attempt) {
-        Duration backoff = INITIAL_BACKOFF;
-        for (int doubling = 1; doubling < attempt && backoff.compareTo(MAX_BACKOFF) < 0; doubling++) {
+        Duration backoff = HEVY_INITIAL_BACKOFF;
+        for (int doubling = 1; doubling < attempt && backoff.compareTo(HEVY_MAX_BACKOFF) < 0; doubling++) {
             backoff = backoff.multipliedBy(2);
         }
         return capped(backoff);
     }
 
     private static Duration capped(Duration delay) {
-        return delay.compareTo(MAX_BACKOFF) > 0 ? MAX_BACKOFF : delay;
+        return delay.compareTo(HEVY_MAX_BACKOFF) > 0 ? HEVY_MAX_BACKOFF : delay;
     }
 
     private void pause(Duration delay) {

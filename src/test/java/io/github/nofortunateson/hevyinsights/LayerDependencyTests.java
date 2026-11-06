@@ -13,8 +13,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Three layers (ADR 0007): dependencies only go downwards, presentation to business to data, without
- * skipping a layer. Inside the data layer, the Hevy source and the database do not know each other.
+ * Package structure (ADR 0007): controller calls service, service calls repository, never the other way
+ * and without skipping a layer. {@code model}, {@code exception} and {@code utils} are used by everyone and
+ * depend on none of the layers.
  * <p>
  * Checked on the source text (imports and fully qualified names) so no extra test library is needed.
  */
@@ -27,13 +28,17 @@ class LayerDependencyTests {
 
     /** Which package may not reference which: {from, forbidden}. Prefix match on the sub-package. */
     private static final List<Rule> FORBIDDEN = List.of(
-            new Rule("presentation", "data"),
-            new Rule("business", "presentation"),
-            new Rule("data", "presentation"),
-            new Rule("data", "business"),
-            new Rule("data.hevy", "data.db"),
-            new Rule("data.db", "data.hevy"),
-            new Rule("business.metrics", "data.hevy"));
+            new Rule("controller", "repository"),
+            new Rule("service", "controller"),
+            new Rule("repository", "controller"),
+            new Rule("repository", "service"),
+            new Rule("model", "controller"), new Rule("model", "service"), new Rule("model", "repository"),
+            new Rule("model", "config"), new Rule("model", "security"),
+            new Rule("exception", "controller"), new Rule("exception", "service"),
+            new Rule("exception", "repository"), new Rule("exception", "config"),
+            new Rule("exception", "security"),
+            new Rule("utils", "controller"), new Rule("utils", "service"), new Rule("utils", "repository"),
+            new Rule("utils", "config"), new Rule("utils", "security"));
 
     @Test
     void dependenciesOnlyGoDownwards() {
@@ -46,10 +51,10 @@ class LayerDependencyTests {
 
     @Test
     void ruleCatchesAForbiddenReference() {
-        assertThat(referencedPackages("import " + ROOT_PACKAGE + ".data.db.Something;"))
-                .containsExactly("data.db");
-        assertThat(new Rule("presentation", "data").forbids("presentation", "data.db")).isTrue();
-        assertThat(new Rule("presentation", "data").forbids("presentation", "database")).isFalse();
+        assertThat(referencedPackages("import " + ROOT_PACKAGE + ".model.dto.Something;"))
+                .containsExactly("model.dto");
+        assertThat(new Rule("utils", "model").forbids("utils", "model.dto")).isTrue();
+        assertThat(new Rule("controller", "repository").forbids("controller", "repositoryx")).isFalse();
     }
 
     private static Stream<Path> sourceFiles() {

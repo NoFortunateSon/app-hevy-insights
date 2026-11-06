@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.data.hevy;
+package io.github.nofortunateson.hevyinsights.model.dto;
 
 import java.time.Instant;
 import java.util.Objects;

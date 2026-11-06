@@ -34,7 +34,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 
 ## In corso
 - PR #20 (issue #19), branch `claude/19-apply-guidelines`: ADR 0006 accettata (opzione 3, ibrida), regola 18 in `docs/linee-guida.md`, client Hevy adeguato alle linee guida (`HevyApiException.statusCode()` ora `OptionalInt`). CI verde sulla PR (run 42258472439). Da mergiare.
-- Issue #21, branch `claude/21-three-layer` (sopra la #20): ADR 0007 accettata, progetto a tre livelli `presentation` → `business` (`sync`, `metrics`) → `data` (`hevy`, `db`); `hevyclient` diventa `data.hevy`. Nuovo `LayerDependencyTests` controlla il verso delle dipendenze sul testo dei sorgenti (provato con una violazione voluta: il test fallisce). 19 test verdi in locale; CI: vedi i check della PR. Prestazioni: nessun costo a runtime atteso dai package (non misurato).
+- Issue #21, PR #22, branch `claude/21-three-layer` (sopra la #20): ADR 0007 accettata, struttura classica di Spring: `controller` → `service` → `repository`, più `exception`, `config`, `model` (`dto`), `security`, `utils` (`Constants`). `HevyClient` sta in `repository`, i DTO Hevy in `model/dto`. `LayerDependencyTests` controlla il verso delle dipendenze sul testo dei sorgenti (provato con una violazione voluta: il test fallisce). 19 test verdi in locale; CI: vedi i check della PR. Prestazioni: nessun costo a runtime atteso dai package (non misurato).
 
 ## Decisioni in attesa di Alessio
 - Nessuna ADR in stato `Proposta` (la 0006 è decisa: opzione 3).

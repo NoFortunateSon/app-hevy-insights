@@ -24,7 +24,7 @@ Deciso da Alessio il 6/11/2026:
 - `groupId` Maven: `io.github.nofortunateson`.
 
 ## Impostazione proposta (da rivedere nel primo ciclo di lavoro)
-> Struttura dei package sostituita dall'ADR 0007 (tre livelli) il 2026-11-06. Il resto di questo ADR resta valido.
+> Struttura dei package sostituita dall'ADR 0007 (controller, service, repository) il 2026-11-06. Il resto di questo ADR resta valido.
 
 Monolite modulare, moduli come package separati con dipendenze in una sola direzione:
 
