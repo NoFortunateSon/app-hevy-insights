@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.hevyclient;
+package io.github.nofortunateson.hevyinsights.data.hevy;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

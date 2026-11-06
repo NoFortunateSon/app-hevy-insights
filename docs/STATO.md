@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #19). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #21). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -33,7 +33,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": i tempi di recupero tra le serie non ci sono nei workout; va ridefinita o tolta (decisione di Alessio).
 
 ## In corso
-- Issue #19, branch `claude/19-apply-guidelines`: ADR 0006 accettata (opzione 3, ibrida) e regola 18 in `docs/linee-guida.md`; `hevyclient` adeguato alle linee guida (niente valori magici, stato HTTP come `OptionalInt` al posto di -1, metodi privati estratti per nome, URL non duplicati nei test). Interfaccia pubblica invariata salvo `HevyApiException.statusCode()` (ora `OptionalInt`). 17 test verdi in locale con `mvn verify`; CI: vedi i check della PR.
+- PR #20 (issue #19), branch `claude/19-apply-guidelines`: ADR 0006 accettata (opzione 3, ibrida), regola 18 in `docs/linee-guida.md`, client Hevy adeguato alle linee guida (`HevyApiException.statusCode()` ora `OptionalInt`). CI verde sulla PR (run 42258472439). Da mergiare.
+- Issue #21, branch `claude/21-three-layer` (sopra la #20): ADR 0007 accettata, progetto a tre livelli `presentation` → `business` (`sync`, `metrics`) → `data` (`hevy`, `db`); `hevyclient` diventa `data.hevy`. Nuovo `LayerDependencyTests` controlla il verso delle dipendenze sul testo dei sorgenti (provato con una violazione voluta: il test fallisce). 19 test verdi in locale; CI: vedi i check della PR. Prestazioni: nessun costo a runtime atteso dai package (non misurato).
 
 ## Decisioni in attesa di Alessio
 - Nessuna ADR in stato `Proposta` (la 0006 è decisa: opzione 3).

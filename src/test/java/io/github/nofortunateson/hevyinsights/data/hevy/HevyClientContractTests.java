@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.hevyclient;
+package io.github.nofortunateson.hevyinsights.data.hevy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -60,7 +60,7 @@ class HevyClientContractTests {
     }
 
     private static ClassPathResource fixture(String name) {
-        return new ClassPathResource("hevyclient/" + name);
+        return new ClassPathResource("data/hevy/" + name);
     }
 
     @Test

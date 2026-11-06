@@ -1,4 +1,4 @@
-package io.github.nofortunateson.hevyinsights.sync;
+package io.github.nofortunateson.hevyinsights.data.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

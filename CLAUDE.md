@@ -36,12 +36,13 @@ Follow `docs/linee-guida.md` (design rules distilled from the books Alessio owns
 - Local ports: Spring apps use 8080-8099. Local services come from the shared compose in the `platform-infra` repo (one database and one user per project).
 
 ## Architecture
-Modular monolith. Modules are packages with one-way dependencies:
-- `hevyclient`: calls to the Hevy API, pagination, HTTP 429 handling. No domain logic. This is the only module that knows the Hevy API shape, because Hevy states it may change or drop the API.
-- `sync`: incremental synchronisation (first full load, then only changes). Stores the original JSON and normalised rows.
-- `metrics`: computes metrics from stored data only. Never calls Hevy.
-- `api`: read-only REST over the metrics.
-Keep modules deep with small interfaces and hide design decisions inside them. Do not extract shared libraries until the same code is needed in at least two apps.
+Three layers (ADR 0007), as packages under the root package. Dependencies only go downwards, `presentation` → `business` → `data`, without skipping a layer; `LayerDependencyTests` enforces it.
+- `presentation`: read-only REST over the metrics.
+- `business.sync`: incremental synchronisation (first full load, then only changes). Stores the original JSON and normalised rows through `data.db`.
+- `business.metrics`: computes metrics from stored data only. Never calls Hevy (must not use `data.hevy`).
+- `data.hevy`: calls to the Hevy API, pagination, HTTP 429 handling. No domain logic. The only package that knows the Hevy API shape, because Hevy states it may change or drop the API.
+- `data.db`: access to the app's Postgres tables. Does not know `data.hevy`, and vice versa.
+Keep each package deep with a small interface and hide design decisions inside it. Do not extract shared libraries until the same code is needed in at least two apps.
 
 ## Data rules
 - Every table has a `user_id` column from day one.
@@ -50,7 +51,7 @@ Keep modules deep with small interfaces and hide design decisions inside them. D
 - Metric definitions are proposals until Alessio confirms them on his real data. "Recovery" depends on whether the API exposes rest times: check on real data before promising it.
 
 ## Testing
-- Contract tests for `hevyclient` against recorded responses. No call to the real Hevy API in CI.
+- Contract tests for `data.hevy` against recorded responses. No call to the real Hevy API in CI.
 - Metric tests with invented data.
 - Integration tests with a real Postgres via Testcontainers (ADR 0004). The shared compose from `platform-infra` is only for running the app locally, never for tests.
 - Schema migrations with Flyway at the version managed by the Spring Boot BOM (ADR 0004). Never edit a migration that has already been applied: add a new one.
