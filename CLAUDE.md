@@ -18,6 +18,14 @@ The decision record is `docs/adr/0003-primo-progetto-hevy-insights.md` (written 
 - Versions, APIs and prices change: verify them online before using them. Do not rely on memory.
 - Do not delete files you did not create. Do not rewrite history.
 
+## Status file (non-negotiable)
+Alessio works with a project assistant on claude.ai that cannot see your chat, only what is on GitHub `main`. `docs/STATO.md` is how it knows the state of the project.
+- Every PR that changes documentation (`CLAUDE.md`, `README.md`, `docs/`), adds or changes an ADR, changes dependencies, the data model, the CI, or finishes/starts a feature must also update `docs/STATO.md` in the same PR. A PR that changes only a typo or a comment does not need it.
+- Keep it short and factual, in Italian (like the ADRs), with the sections already in the file. Replace stale lines instead of appending history. Date each update (YYYY-MM-DD).
+- Facts only: what is merged, what was verified (and how), what was NOT verified, open PRs/issues, decisions waiting for Alessio. Mark hypotheses as such. Never include secrets.
+- Do not claim "CI green" or "tested" unless you read the result of the run; write the PR/run you looked at.
+- If you could not update it, say so in the PR description.
+
 ## Stack baseline (ADR 0001 and 0002 of the workspace)
 - Java 25 (OpenJDK builds only), Spring Boot 4.1, Maven (no Gradle), Postgres.
 - Maven `groupId`: `io.github.nofortunateson`. Root package: `io.github.nofortunateson.hevyinsights`.
