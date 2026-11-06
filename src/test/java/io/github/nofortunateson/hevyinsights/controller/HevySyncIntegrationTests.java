@@ -100,6 +100,15 @@ class HevySyncIntegrationTests {
     }
 
     @Test
+    void restartPointIsKeptInWholeSeconds() {
+        HevySyncController first = syncAt(Instant.parse("2026-11-01T10:00:00.987654Z"), FAKE_KEY);
+        expectWorkoutPages();
+        first.synchronize();
+
+        assertThat(lastSyncStart()).contains(FIRST_SYNC);
+    }
+
+    @Test
     void newestEventDecidesWhenAWorkoutHasSeveral() {
         recordLastSyncStart(FIRST_SYNC);
         HevySyncController sync = syncAt(SECOND_SYNC, FAKE_KEY);
@@ -159,9 +168,36 @@ class HevySyncIntegrationTests {
         assertThat(lastSyncStart()).isEmpty();
     }
 
+    @Test
+    void runOnceModeSyncsWhenTheKeyIsSet() {
+        HevySyncController sync = syncAt(FIRST_SYNC, FAKE_KEY);
+        expectWorkoutPages();
+
+        new HevySyncOnceRunner(sync, hevyProperties(FAKE_KEY)).run(null);
+
+        server.verify();
+        assertThat(lastSyncStart()).contains(FIRST_SYNC);
+    }
+
+    @Test
+    void runOnceModeFailsWithoutApiKey() {
+        HevySyncController sync = syncAt(FIRST_SYNC, " ");
+        server.expect(never(), anything());
+
+        assertThatThrownBy(() -> new HevySyncOnceRunner(sync, hevyProperties(" ")).run(null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Hevy API key missing: set HEVY_API_KEY");
+        server.verify();
+        assertThat(lastSyncStart()).isEmpty();
+    }
+
+    private static HevyApiProperties hevyProperties(String apiKey) {
+        return new HevyApiProperties(URI.create(BASE), apiKey, ATTEMPTS);
+    }
+
     /** The real controller and service, with Hevy replaced by the mock server and a fixed clock. */
     private HevySyncController syncAt(Instant now, String apiKey) {
-        HevyApiProperties hevyProperties = new HevyApiProperties(URI.create(BASE), apiKey, ATTEMPTS);
+        HevyApiProperties hevyProperties = hevyProperties(apiKey);
         RestClient.Builder builder = HevyApiConfiguration.restClientBuilder(hevyProperties);
         server = MockRestServiceServer.bindTo(builder).build();
         HevyApiController hevyApi = new HevyApiController(builder.build(), delay -> { }, ATTEMPTS);

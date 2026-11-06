@@ -25,6 +25,22 @@ L'app parte anche senza `HEVY_API_KEY`: la chiave viene controllata solo quando 
 - Build e test: `mvn verify` (avvia Postgres 18.6 con Testcontainers; nessuna chiamata alla vera API Hevy).
 - Avvio locale: prima `docker compose up -d --wait` in `platform-infra`, poi `mvn spring-boot:run` dalla cartella del progetto (serve per trovare `.env`). Porta 8080, health su `/actuator/health`. Con `HEVY_API_KEY` impostata, la sync con Hevy parte 30 secondi dopo l'avvio.
 
+## Esecuzione a PC spento (ADR 0010)
+La sync gira ogni 6 ore (minuto 17, UTC) sul workflow GitHub Actions `Hevy sync` (`.github/workflows/hevy-sync.yml`), in modalità "una sync e poi esci", e scrive su un Postgres gratuito di Neon. Si può lanciare anche a mano da GitHub: Actions → Hevy sync → Run workflow.
+
+Configurazione una tantum (la fa Alessio; i valori non passano mai dal repository):
+1. Su [neon.com](https://neon.com) crea un progetto gratuito (regione europea; Postgres 18 se disponibile). Dalla "connection string" `postgresql://UTENTE:PASSWORD@HOST/DATABASE?sslmode=require` ricava i tre valori sotto.
+2. Su GitHub: repository → Settings → Secrets and variables → Actions → New repository secret, quattro secrets:
+
+| Secret | Valore |
+|---|---|
+| `HEVY_API_KEY` | La chiave API Hevy |
+| `NEON_JDBC_URL` | `jdbc:postgresql://HOST/DATABASE?sslmode=require` |
+| `NEON_DB_USER` | `UTENTE` |
+| `NEON_DB_PASSWORD` | `PASSWORD` |
+
+Finché `HEVY_API_KEY` e `NEON_JDBC_URL` mancano, il workflow si salta con un avviso invece di fallire. Le tabelle su Neon le crea Flyway al primo giro. I dati su Neon sono separati da quelli del Postgres locale.
+
 ## Struttura
 Livelli classici di Spring (ADR 0007): `controller` → `service` → `repository`, mai al contrario e senza saltare livelli; lo controlla `LayerDependencyTests`.
 

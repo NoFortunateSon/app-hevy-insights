@@ -59,4 +59,4 @@ Put new classes in the package of their type; do not create other top-level pack
 
 ## Open points (do not decide alone)
 - How Claude is integrated (MCP server, Anthropic API, or chat only): a later ADR.
-- Whether it also runs in Kubernetes: not now, local only.
+- Where it runs: locally for development; with the PC off, the sync runs on a scheduled GitHub Actions workflow (`.github/workflows/hevy-sync.yml`) against a Neon free Postgres (ADR 0010). Where a future REST API runs: a later ADR.
