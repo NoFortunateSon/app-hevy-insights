@@ -19,6 +19,11 @@
 
     <properties>
         <java.version>25</java.version>
+        <!-- Code quality tools (ADR 0011). Versions checked on Maven Central on 2026-11-06. -->
+        <jacoco.version>0.8.16</jacoco.version>
+        <pitest.version>1.30.2</pitest.version>
+        <pitest-junit5.version>1.2.3</pitest-junit5.version>
+        <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -73,10 +78,47 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <!-- SonarQube Cloud analysis (ADR 0011), run by CI: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -->
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>${sonar-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Test coverage (ADR 0011): XML report in target/site/jacoco/jacoco.xml, read by SonarQube Cloud. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <formats>
+                                <format>XML</format>
+                                <format>HTML</format>
+                            </formats>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -95,4 +137,47 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Mutation testing (ADR 0011): mvn -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage
+             PIT changes the code on purpose and checks that some test fails. Only fast tests run against the
+             mutants: tests that start Spring or Testcontainers would take too long per mutant. -->
+        <profile>
+            <id>mutation</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>${pitest.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>${pitest-junit5.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <targetClasses>
+                                <param>io.github.nofortunateson.hevyinsights.*</param>
+                            </targetClasses>
+                            <targetTests>
+                                <param>io.github.nofortunateson.hevyinsights.controller.hevy.*Tests</param>
+                                <param>io.github.nofortunateson.hevyinsights.controller.HevyApiControllerContractTests</param>
+                                <param>io.github.nofortunateson.hevyinsights.model.*Tests</param>
+                                <param>io.github.nofortunateson.hevyinsights.utils.*Tests</param>
+                                <param>io.github.nofortunateson.hevyinsights.config.*Tests</param>
+                                <param>io.github.nofortunateson.hevyinsights.controller.HevySyncIntegrationTests</param>
+                            </targetTests>
+                            <outputFormats>
+                                <param>HTML</param>
+                                <param>XML</param>
+                            </outputFormats>
+                            <timestampedReports>false</timestampedReports>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

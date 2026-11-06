@@ -35,10 +35,6 @@ public class HevySyncState {
         this.lastSyncStartedAt = startedAt;
     }
 
-    public UUID userId() {
-        return userId;
-    }
-
     public Instant lastSyncStartedAt() {
         return lastSyncStartedAt;
     }

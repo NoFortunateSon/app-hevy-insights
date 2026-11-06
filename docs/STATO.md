@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #44). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #46). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -46,7 +46,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #44, branch `claude/44-adr-code-quality`: ADR 0011 **accettata** (SonarQube Cloud gratuito, JaCoCo + PIT, soglie dopo la prima misura); conferma di Alessio sulle classi `public` di `controller/hevy` scritta nell'ADR 0007. Solo documentazione.
+- PR #45 (issue #44): ADR 0011 accettata (A1 SonarQube Cloud, B1 JaCoCo + PIT, C1 soglie dopo la prima misura); conferma delle classi `public` di `controller/hevy` (ADR 0007).
+- Issue #46, branch `claude/46-code-quality-ci` (parte dal branch della #45): JaCoCo in `verify` (righe 96,9%, rami 91,5%); PIT nel profilo `mutation`, funziona con Java 25, 94% delle mutazioni scoperte (91/97), circa 8 minuti; workflow `Mutation testing` settimanale e a mano (non a ogni PR, per i minuti gratuiti); passo SonarQube Cloud in `ci.yml`, saltato finché mancano `SONAR_TOKEN`, `SONAR_ORGANIZATION`, `SONAR_PROJECT_KEY`. 58 test verdi in locale. CI: vedi i check della PR. Da fare ad Alessio: configurazione su SonarQube Cloud e su GitHub.
 - Dopo: ADR delle metriche.
 
 ## Decisioni in attesa di Alessio

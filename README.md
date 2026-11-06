@@ -41,6 +41,11 @@ Configurazione una tantum (la fa Alessio; i valori non passano mai dal repositor
 
 Finché `HEVY_API_KEY` e `NEON_JDBC_URL` mancano, il workflow si salta con un avviso invece di fallire. Le tabelle su Neon le crea Flyway al primo giro. I dati su Neon sono separati da quelli del Postgres locale.
 
+## Qualità del codice (ADR 0011)
+- Copertura: `mvn verify` produce il rapporto JaCoCo in `target/site/jacoco/index.html`.
+- Mutation testing: `mvn -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage` (circa 8 minuti; servono Docker e Postgres di Testcontainers), rapporto in `target/pit-reports/index.html`. Su GitHub: workflow `Mutation testing`, ogni lunedì e a mano.
+- SonarQube Cloud: analisi nella CI di ogni PR e di `main`, attiva quando esistono il secret `SONAR_TOKEN` e le variabili `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY` del repository.
+
 ## Struttura
 Livelli classici di Spring (ADR 0007): `controller` → `service` → `repository`, mai al contrario e senza saltare livelli; lo controlla `LayerDependencyTests`.
 
