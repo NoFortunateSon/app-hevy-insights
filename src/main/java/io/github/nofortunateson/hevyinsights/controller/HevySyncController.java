@@ -4,6 +4,7 @@ import io.github.nofortunateson.hevyinsights.config.HevyApiProperties;
 import io.github.nofortunateson.hevyinsights.service.HevySyncService;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,9 @@ public class HevySyncController {
             LOG.warn("Hevy sync skipped: HEVY_API_KEY is not set");
             return;
         }
-        Instant startedAt = clock.instant();
+        // Whole seconds: Hevy documents `since` only in that form (default 1970-01-01T00:00:00Z). Rounding down
+        // only re-reads up to one second of changes, which the idempotent store ignores.
+        Instant startedAt = clock.instant().truncatedTo(ChronoUnit.SECONDS);
         Optional<Instant> since = syncService.lastSyncStart();
         if (since.isEmpty()) {
             var allWorkouts = hevyApi.fetchAllWorkouts();

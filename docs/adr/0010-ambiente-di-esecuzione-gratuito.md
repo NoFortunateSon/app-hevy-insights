@@ -39,3 +39,10 @@ Deciso da Alessio il 2026-11-06: **opzione 2**, GitHub Actions pianificato + Pos
 - Il Postgres locale di `platform-infra` resta per lo sviluppo; i dati locali e quelli su Neon sono separati.
 - `CLAUDE.md` (punto aperto "solo locale") e `docs/STATO.md` vanno aggiornati.
 - Da verificare alla prima esecuzione: durata reale di un giro (minuti consumati), connessione a Neon con SSL, versione di Postgres offerta da Neon rispetto alla 18 dei test.
+
+## Implementazione (issue #40, 2026-11-06)
+- Modalità "una sync e poi esci": `hevy-insights.sync.run-once=true` attiva `controller/HevySyncOnceRunner`, che fa una sync all'avvio; un errore ferma l'avvio e il processo esce con codice diverso da 0, così il giro risulta fallito su GitHub. In questa modalità la chiave mancante è un errore.
+- Workflow `.github/workflows/hevy-sync.yml`: ogni 6 ore al minuto 17 (UTC) e a mano; compila senza test (i test girano nella CI di ogni PR) e lancia il jar senza server web. Senza i secrets si salta con un avviso.
+- Verificato in locale con lo stesso comando del workflow, contro un Postgres temporaneo e un finto server Hevy: primo carico ed eventi escono con 0, un errore 500 di Hevy esce con 1; il processo termina da solo.
+- L'ora di inizio della sync si tronca al secondo: la spec di Hevy mostra `since` solo in quella forma.
+- Da verificare al primo giro vero: minuti consumati, connessione a Neon, risposta di Hevy sui dati reali.

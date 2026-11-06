@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #38). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #40). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -41,6 +41,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 ## In corso
 - Issue #36, branch `claude/36-load-dotenv`: l'app legge `.env` della cartella del progetto se esiste (`spring.config.import: optional:file:${HEVY_INSIGHTS_ENV_FILE:.env}[.properties]`); le variabili d'ambiente vere vincono (verificato sulla documentazione di Spring Boot 4.1.2). I test non leggono mai `.env` (Surefire punta `HEVY_INSIGHTS_ENV_FILE` a un file inesistente). Verificato: 44 test verdi in locale; avvio del jar con il `.env` di Alessio e sync spenta, porta 8099: health `UP`, Flyway "Schema is up to date". Effetto collaterale: la migrazione V2 è stata applicata al database locale di Alessio. CI: vedi i check della PR.
 - Issue #38, branch `claude/38-adr-run-environment` (parte dal branch della #37): ADR 0010 **accettata**: GitHub Actions pianificato + Postgres Neon gratuito (opzioni verificate sulle pagine ufficiali del 2026-11-06). Solo documentazione.
+
+- Issue #40, branch `claude/40-scheduled-sync-workflow` (parte dal branch della #39): workflow `Hevy sync` su GitHub Actions ogni 6 ore + modalità "una sync e poi esci" (`HevySyncOnceRunner`); `since` troncato al secondo. 47 test verdi in locale; comando del workflow provato in locale contro Postgres temporaneo e finto Hevy (exit 0 su successo, 1 su errore 500). CI: vedi i check della PR. **Non ancora attivo:** servono il progetto Neon e i 4 secrets del repository (passi nel README), da fare ad Alessio.
 
 ## Decisioni in attesa di Alessio
 - La sync parte da `HevySyncController` (classe nuova) invece che da `HevyApiController`, per la regola 19: da confermare, oppure si accorpano (ADR 0008, sezione Implementazione).

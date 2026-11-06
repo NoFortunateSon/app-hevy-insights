@@ -1,0 +1,64 @@
+name: Hevy sync
+
+# Runs the Hevy sync with the PC off (ADR 0010): one sync, then exit. Data goes to the Neon free Postgres.
+# Repository secrets (set by Alessio, never in the repo): HEVY_API_KEY, NEON_JDBC_URL, NEON_DB_USER,
+# NEON_DB_PASSWORD. Until they exist, the run is skipped with a warning instead of failing.
+
+on:
+  schedule:
+    # Every 6 hours at minute 17 (UTC): never exactly at xx:00, as Hevy asks. GitHub may delay or drop a
+    # scheduled run under load; the next run catches up from the restart point (ADR 0008).
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hevy-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check secrets
+        id: secrets
+        env:
+          HEVY_API_KEY: ${{ secrets.HEVY_API_KEY }}
+          NEON_JDBC_URL: ${{ secrets.NEON_JDBC_URL }}
+        run: |
+          if [ -z "$HEVY_API_KEY" ] || [ -z "$NEON_JDBC_URL" ]; then
+            echo "::warning::Hevy sync skipped: repository secrets HEVY_API_KEY and NEON_JDBC_URL are not set yet."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.secrets.outputs.ready == 'true'
+
+      - uses: actions/setup-java@v6
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build (tests run in CI on every PR)
+        if: steps.secrets.outputs.ready == 'true'
+        run: mvn --batch-mode --no-transfer-progress -DskipTests package
+
+      - name: Sync once
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          HEVY_API_KEY: ${{ secrets.HEVY_API_KEY }}
+          SPRING_DATASOURCE_URL: ${{ secrets.NEON_JDBC_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.NEON_DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.NEON_DB_PASSWORD }}
+        run: >
+          java -jar target/app-hevy-insights-*.jar
+          --hevy-insights.sync.run-once=true
+          --hevy-insights.sync.scheduled=false
+          --spring.main.web-application-type=none
