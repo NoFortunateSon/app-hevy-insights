@@ -26,6 +26,9 @@ Alessio works with a project assistant on claude.ai that cannot see your chat, o
 - Do not claim "CI green" or "tested" unless you read the result of the run; write the PR/run you looked at.
 - If you could not update it, say so in the PR description.
 
+## Coding guidelines (non-negotiable)
+Follow `docs/linee-guida.md` (design rules distilled from the books Alessio owns) in every change and tick its checklist before calling a PR ready. If a rule clashes with another rule or an ADR, do not pick: write an ADR with status `Proposta`. Extend the guidelines only from books you actually read, and say which.
+
 ## Stack baseline (ADR 0001 and 0002 of the workspace)
 - Java 25 (OpenJDK builds only), Spring Boot 4.1, Maven (no Gradle), Postgres.
 - Maven `groupId`: `io.github.nofortunateson`. Root package: `io.github.nofortunateson.hevyinsights`.
