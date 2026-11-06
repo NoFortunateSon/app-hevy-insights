@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR #14). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR #16). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -26,7 +26,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Recupero tra le serie: non sappiamo se l'API lo espone (serve la chiave Hevy e i dati reali).
 
 ## In corso
-- Issue #13 `hevyclient` (aperta).
+- Issue #13 `hevyclient`: PR #15 aperta (non letta nel dettaglio da questa PR).
 
 ## Decisioni in attesa di Alessio
 - Nessuna ADR in stato `Proposta` al momento.
