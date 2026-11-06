@@ -8,6 +8,11 @@ spring:
     username: hevy_insights
     password: ${HEVY_INSIGHTS_DB_PASSWORD:}
 
+# Hevy public API. The key is a secret: only from the environment, never in this file.
+hevy:
+  api:
+    key: ${HEVY_API_KEY:}
+
 server:
   port: 8080
 
