@@ -67,4 +67,4 @@ Deciso da Alessio il 2026-11-07, sui numeri misurati sopra:
 - **Quality Gate di SonarQube Cloud bloccante**: il passo Sonar in `ci.yml` usa `sonar.qualitygate.wait=true`, quindi il job `build` fallisce se il gate fallisce.
 - **JaCoCo**: `jacoco:check` in `verify`, minimo 90% delle righe e 85% dei rami. Sotto, `mvn verify` fallisce.
 - **PIT**: `mutationThreshold` 90. Sotto, il giro di PIT fallisce.
-- **PIT a ogni PR**: il repository ora è pubblico (ADR 0012) e i minuti di Actions sono illimitati, quindi il motivo per cui PIT girava solo il lunedì non vale più. Un giro dura circa 8 minuti. Il workflow `Mutation testing` gira anche su ogni pull request, oltre al lunedi' e a mano.
+- **PIT a ogni PR**: il repository ora è pubblico (ADR 0012) e i minuti di Actions sono illimitati, quindi il motivo per cui PIT girava solo il lunedì non vale più. Sul runner di GitHub un giro dura circa 2 minuti e mezzo (PR #51: 2m18s, 96 mutazioni, 92 scoperte, 96%). Il workflow `Mutation testing` gira anche su ogni pull request, oltre al lunedi' e a mano.
