@@ -197,11 +197,4 @@ class HevyApiControllerContractTests {
                 .doesNotContain(FAKE_KEY)
                 .contains("key=***");
     }
-
-    @Test
-    void retryAfterIsCappedAndMalformedValuesFallBackToBackoff() {
-        assertThat(HevyApiController.retryDelay("3600", 1)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
-        assertThat(HevyApiController.retryDelay("Wed, 21 Oct 2026 07:28:00 GMT", 2)).isEqualTo(Duration.ofSeconds(2));
-        assertThat(HevyApiController.retryDelay(null, 30)).isEqualTo(Constants.HEVY_MAX_BACKOFF);
-    }
 }

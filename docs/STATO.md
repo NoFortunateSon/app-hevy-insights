@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR #28). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #27). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -15,6 +15,9 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | Client Hevy (`HevyClient`) in sola lettura (workout ed eventi, paginazione, retry su 429), contract test; README, `.gitattributes` | #15 | CI verde sulla PR e su `main` (run 42256422866) |
 | Linee guida di codice `docs/linee-guida.md`, ADR 0006 proposta | #18 | CI verde su `main` (run 42257789483) |
 | ADR 0006 accettata (opzione 3, ibrida), regola 18, client Hevy adeguato alle linee guida (`HevyApiException.statusCode()` ora `OptionalInt`) | #20 | CI verde sulla PR (run 42258472439) e su `main` (run 42260149343) |
+| ADR 0007 accettata: package `controller` → `service` → `repository`, più `exception`, `config`, `model` (`dto`), `security`, `utils`; `LayerDependencyTests` | #23 | CI verde su `main` (run 42265118957) |
+| Classi rinominate per ruolo; client Hevy = `controller/HevyApiController` (il repository è solo database); criterio model/DTO | #25 | CI verde su `main` (run 42265157454) |
+| Regola 19 "una classe, un compito", aggiunta all'ADR 0007 | #28 | CI verde su `main` (run 42266731836) |
 
 ## Verificato
 - La CI usa Testcontainers con Postgres 18.6 sul runner GitHub (`ubuntu-latest`): funziona (run della PR #12).
@@ -34,12 +37,10 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": i tempi di recupero tra le serie non ci sono nei workout; va ridefinita o tolta (decisione di Alessio).
 
 ## In corso
-- Issue #21, PR #23, branch `claude/21-three-layer`: ADR 0007 accettata, struttura classica di Spring: `controller` → `service` → `repository`, più `exception`, `config`, `model` (`dto`), `security`, `utils` (`Constants`). `HevyApiController` sta in `repository`, i DTO Hevy in `model/dto`. `LayerDependencyTests` controlla il verso delle dipendenze sul testo dei sorgenti (provato con una violazione voluta: il test fallisce). 19 test verdi in locale; CI: vedi i check della PR. Prestazioni: nessun costo a runtime atteso dai package (non misurato). Nota: la PR #22 è stata mergiata nel branch della #20 invece che in `main`; la #23 porta tutto su `main`.
-
-- Issue #24, branch `claude/24-rename-classes` (parte dal branch della #23): classi rinominate per ruolo: `HevyClient` → `HevyApiController` (spostato da `repository` a `controller`: il repository è solo database; la sync partirà dal controller, ADR 0007), `HevyClientConfiguration` → `HevyApiConfiguration`, `HevyWorkout` → `HevyWorkoutDto`, `HevyWorkoutEvent` → `HevyWorkoutEventDto`, `HevyRateLimitedException` → `HevyRateLimitExceededException`, `Sleeper` → `RetrySleeper`. Criterio model/DTO scritto in ADR 0007 e `CLAUDE.md`. Nessun cambio di comportamento.
+- Issue #27, branch `claude/27-split-hevy-api-controller`: `HevyApiController` (da 218 a 48 righe) diviso per compiti: `controller/hevy/HevyHttpClient` (chiamata HTTP, stato, attese su 429), `controller/hevy/HevyPageWalker` (pagine), `controller/hevy/HevyResponseMapper` (JSON → DTO), `utils/RateLimitRetryPolicy` (quando riprovare dopo 429). Nessun cambio di comportamento: contract test invariati e verdi (il test sul ritardo dopo 429 è passato a `RateLimitRetryPolicyTests`). Nuovi test unitari per `RateLimitRetryPolicy` e `HevyResponseMapper`; `LayerDependencyTests` verifica che solo `HevyApiController` usi `controller/hevy` (provato con una violazione voluta: il test fallisce). 34 test verdi in locale con `mvn verify`; CI: vedi i check della PR. Nessuna classe aggiunta in `model`, `repository`, `service`.
 
 ## Decisioni in attesa di Alessio
-- Aggiunta all'ADR 0007 e regola 19 "una classe, un compito" (PR #28): vale con il merge. Poi issue #27: Claude Code divide `HevyApiController`.
+- Classi di supporto di `controller/hevy` `public` invece che package-private: Java non permette altro finché `HevyApiController` sta in `controller` (dettagli nell'ADR 0007, esito dell'issue #27). Da confermare, oppure spostare `HevyApiController` in `controller/hevy`.
 - Scelta della tecnologia del `repository` (JDBC, Spring Data JDBC o JPA): ADR ancora da scrivere.
 - Nessuna ADR in stato `Proposta` (la 0006 è decisa: opzione 3).
 - Prossima proposta prevista: design della sync (caricamento completo + eventi, punto di ripartenza, cancellazioni, UUID utente, recovery).

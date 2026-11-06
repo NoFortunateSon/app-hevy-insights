@@ -30,14 +30,14 @@ Livelli classici di Spring (ADR 0007): `controller` → `service` → `repositor
 | Package | Cosa contiene | Oggi |
 |---|---|---|
 | (radice) | La classe `main` | `HevyInsightsApplication` |
-| `controller` | Confine HTTP: espone i service (REST in sola lettura) e parla con l'API Hevy | `HevyApiController` (API Hevy in sola lettura) |
+| `controller` | Confine HTTP: espone i service (REST in sola lettura) e parla con l'API Hevy | `HevyApiController` (punto d'ingresso API Hevy, sola lettura); in `controller/hevy`: `HevyHttpClient`, `HevyPageWalker`, `HevyResponseMapper` |
 | `service` | Logica di business: sync incrementale, metriche | Vuoto |
 | `repository` | Solo accesso al database | Nessuna classe; tabella `hevy_workout_raw` (migrazione V1) |
 | `exception` | Tutte le eccezioni | `HevyApiException`, `HevyRateLimitExceededException` |
 | `config` | Configurazioni | `HevyApiConfiguration`, `HevyApiProperties` |
 | `model`, `model/dto` | Modelli; DTO nella sottocartella | `HevyWorkoutDto`, `HevyWorkoutEventDto` (DTO) |
 | `security` | Sicurezza | Vuoto |
-| `utils` | `Constants` e classi che non rientrano altrove | `Constants`, `RetrySleeper` |
+| `utils` | `Constants` e classi che non rientrano altrove | `Constants`, `RetrySleeper`, `RateLimitRetryPolicy` |
 
 Migrazioni Flyway in `src/main/resources/db/migration`. Una migrazione già applicata non si modifica: se ne aggiunge una nuova.
 
