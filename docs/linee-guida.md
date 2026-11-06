@@ -1,0 +1,39 @@
+# Linee guida di codice (app-hevy-insights)
+
+Regole di progettazione per Claude Code e per chi scrive codice in questo repo. Sono note mie, scritte con parole mie, tratte dai libri di Alessio in OneDrive (`PROGRAMMAZIONE\LIBRI`). Ultimo aggiornamento: 2026-11-06.
+
+**Come si usano.** Le regole valgono per ogni PR. Se una regola si scontra con un'altra o con un ADR, non scegliere tu: scrivi un ADR in stato `Proposta`. Una regola `[Opinione]` è una mia sintesi, non un'affermazione del libro.
+
+**Libri letti finora.** Ousterhout, *A Philosophy of Software Design* 2ed (sommario dei principi e delle "bandiere rosse") e Fowler, *Refactoring* 2ed (cap. 2 e inizio cap. 3 sui "cattivi odori"). **Non letti**: *Effective Java* e *The Pragmatic Programmer* (sono epub, il connettore non li legge), Khorikov sui test (solo indice). Quando saranno letti, questo file va esteso, non riscritto.
+
+## Regole
+
+| # | Regola | Perché | Quando NON applicarla | Fonte | Stato |
+|---|---|---|---|---|---|
+| 1 | **Moduli profondi.** Interfaccia piccola, molto lavoro dietro. Un'interfaccia semplice vale più di un'implementazione semplice. | Meno cose da sapere per usare il modulo; i cambi restano dentro. | Se il modulo non nasconde nulla (solo inoltra), non crearlo. | Ousterhout, principi 4-6 | Fatto |
+| 2 | **Una decisione di design vive in un solo modulo.** La forma dell'API Hevy la conosce solo `hevyclient`; `sync` e `metrics` usano tipi nostri. | Se la stessa decisione compare in due moduli, ogni cambio li tocca entrambi. | Nessuna: è già una regola di `CLAUDE.md`. | Ousterhout, bandiera "Information Leakage" | Fatto |
+| 3 | **Niente metodi o livelli che inoltrano soltanto.** Ogni livello deve offrire un'astrazione diversa da quello sotto. | Un livello identico al vicino aggiunge codice senza togliere complessità. | Un decorator che aggiunge comportamento vero. | Ousterhout, principio 9, bandiera "Pass-Through Method" | Fatto |
+| 4 | **Separare codice generico da codice specifico.** La logica generica non conosce i casi particolari di chi la usa. | Il generico resta riusabile e più semplice da capire. | Quando il caso particolare è l'unico uso reale: non anticipare. | Ousterhout, principio 8 | Fatto |
+| 5 | **Niente duplicazione.** Se la stessa struttura compare in due punti, unificala. | Chi legge deve confrontare le copie; chi modifica deve trovarle tutte. | Non estrarre una libreria condivisa prima di due app che la usano (già in `CLAUDE.md`). | Fowler cap. 3 "Duplicated Code"; Ousterhout "Repetition" | Fatto |
+| 6 | **Nomi precisi, scelti per intenzione.** Se non trovi un nome, spesso il design è sbagliato: fermati e semplifica. | Un buon nome evita di aprire il corpo della funzione. | Nomi del dominio Hevy: tienili come li chiama l'API dentro `hevyclient`. | Fowler "Mysterious Name"; Ousterhout "Vague Name", "Hard to Pick Name" | Fatto |
+| 7 | **Dati globali e mutabili: evitarli.** Costanti immutabili sono accettabili; lo stato modificabile da ovunque no. Incapsula e limita lo scopo. | Un dato modificabile da ovunque produce bug a distanza, difficili da rintracciare. | Costanti vere (valori che non cambiano mai a runtime). | Fowler "Global Data", "Mutable Data" | Fatto |
+| 8 | **Preferire `record`, campi `final`, collezioni immutabili; aggiornare restituendo copie.** | Meno stato che può cambiare, meno effetti collaterali. | Entità JPA o librerie che richiedono setter: confinale in un solo punto. | Fowler "Mutable Data" (l'indicazione su Java è mia) | Opinione |
+| 9 | **Niente numeri o stringhe "magici":** dai un nome a ogni valore con significato (`static final` o proprietà di configurazione); i valori che cambiano per ambiente vanno in `application.yaml`, mai nel codice. | Il nome documenta il significato e c'è un solo punto da cambiare. | Valori ovvi (0, 1, indice di array). Non creare costanti per usarle una volta sola con un nome che ripete il valore (`FIVE = 5`). | Sintesi mia, coerente con le regole 5 e 6 | Opinione |
+| 10 | **Parametri: pochi.** Se più parametri viaggiano insieme, raggruppali in un `record`. Niente flag booleani che scelgono il comportamento: due metodi con due nomi. | Le liste lunghe confondono; un flag nasconde due funzioni in una. | Metodi che il framework impone con una certa firma. | Fowler "Long Parameter List" | Fatto |
+| 11 | **Commenti: spiegano ciò che il codice non dice** (perché, vincoli, intenzione), non ripetono il codice. L'interfaccia non descrive l'implementazione. Un commento scritto prima del codice aiuta a disegnarlo. | I commenti che ripetono il codice invecchiano e non servono. | Codice davvero ovvio: nessun commento. | Ousterhout cap. 12-15, bandiere "Comment Repeats Code", "Implementation Documentation Contaminates Interface" | Fatto |
+| 12 | **Progettare gli errori fuori dall'esistenza dove ha senso** (es. cancellare ciò che non c'è non è un errore), invece di moltiplicare eccezioni da gestire. | Ogni eccezione in più è un caso per chi chiama. | Errori che l'utente deve conoscere (autenticazione Hevy rifiutata, 429): restano espliciti. | Ousterhout cap. 10 | Fatto |
+| 13 | **Niente flessibilità speculativa.** Non aggiungere parametri, interfacce o configurazioni "per il futuro": prima serve un secondo uso vero. Poi si rifattorizza. | La flessibilità non usata rallenta i cambi reali. | Un costo di cambio futuro molto più alto di oggi (es. migrazioni già applicate: vedi ADR 0004). | Fowler cap. 2 "Refactoring, Architecture, and Yagni" | Fatto |
+| 14 | **Leggibilità prima della velocità di scrittura.** Codice ovvio a chi lo legge la prima volta. | Si legge molto più di quanto si scrive. | Percorsi critici misurati e dimostrati lenti. | Ousterhout, principio 14 | Fatto |
+| 15 | **Test come rete per il refactoring.** Senza test automatici non si rifattorizza. Ogni PR porta i suoi test (già in `CLAUDE.md`). | Il refactoring è sicuro solo se un test fallisce quando si rompe qualcosa. | — | Fowler cap. 2 | Fatto |
+| 16 | **Interfacce non banali: prova due progetti** e scegli quello con interfaccia più semplice. | La prima idea di rado è la migliore. | Interfacce piccole o già decise da un ADR. | Ousterhout, principio 12 | Fatto |
+| 17 | **Un solo modo di fare ogni cosa** (nomi, gestione errori, struttura dei test). Prima di introdurre un nuovo stile, cerca come si fa già nel repo. | Chi legge impara una volta sola. | Quando lo stile esistente è sbagliato: proponi di cambiarlo, non mischiare. | Ousterhout cap. 17 (letto solo il titolo nell'indice) | Opinione |
+
+## Punto aperto: dimensione delle funzioni
+Fowler consiglia di spezzare molto: funzioni brevi con nome che dice l'intenzione, e un commento che spiega "cosa fa" è un invito a estrarre una funzione. Ousterhout avverte che spezzare troppo crea moduli superficiali (ha un paragrafo che discute proprio questa differenza). **Non è risolto**: vedi `docs/adr/0006-dimensione-delle-funzioni.md` (stato `Proposta`).
+Nel frattempo: spezza quando un blocco ha un nome naturale e un solo scopo; non spezzare per rispettare una lunghezza; non creare funzioni che inoltrano soltanto (regola 3).
+
+## Checklist per ogni PR
+- Un modulo nasconde una decisione (regole 1-2)? Nessun livello che inoltra (3)?
+- Nomi precisi (6), nessun valore magico (9), nessun dato globale mutabile (7).
+- Nessuna duplicazione (5); commenti solo dove servono (11); niente flessibilità non usata (13).
+- Test presenti e CI letta (15). `docs/STATO.md` aggiornato (vedi `CLAUDE.md`).

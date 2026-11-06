@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR #15). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR #18). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -20,6 +20,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - I workout dell'API **non** hanno tempi di recupero: `rest_seconds` esiste solo nelle routine (stessa spec).
 
 ## Non verificato / da fare
+- Linee guida (`docs/linee-guida.md`): basate solo su Ousterhout (sommario) e Fowler (cap. 2 e inizio cap. 3). Effective Java e Pragmatic Programmer (epub) non letti; Khorikov solo indice.
 - Limiti di frequenza di Hevy: non documentati (niente 429 né `Retry-After` nella spec). La gestione del 429 nella PR #15 è difensiva, non provata contro Hevy.
 - Nessuna chiamata alla vera API Hevy finora: forma delle risposte verificata solo sulla spec, non su dati reali.
 - ADR 0001 e 0002 del workspace, citate in `CLAUDE.md`: non presenti nel repo `workspace-docs` (su `origin/main` c'è solo il README, controllato il 2026-11-06).
@@ -33,7 +34,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - PR #15 (issue #13), branch `claude/13-hevyclient-workouts`: `HevyClient` in sola lettura (workout ed eventi, paginazione, retry su 429), contract test con dati inventati; README riscritto, `.gitattributes` (LF), questo file. 17 test verdi in locale con `mvn verify`; CI: vedi i check della PR.
 
 ## Decisioni in attesa di Alessio
-- Nessuna ADR in stato `Proposta` al momento. Prossima proposta prevista: design della sync (caricamento completo + eventi, punto di ripartenza, cancellazioni, UUID utente, recovery).
+- ADR 0006 `Proposta` (PR #18): dimensione delle funzioni, contraddizione Fowler / Ousterhout.
+- Prossima proposta prevista: design della sync (caricamento completo + eventi, punto di ripartenza, cancellazioni, UUID utente, recovery).
 
 ## Per il coordinatore
 - Nessuna richiesta.
