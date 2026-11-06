@@ -1,6 +1,6 @@
 # 0008 - Design della sync con Hevy
 
-Stato: Proposta
+Stato: Accettata
 Data: 2026-11-06
 
 ## Contesto
@@ -16,11 +16,11 @@ Fatti dalla spec OpenAPI di Hevy (`https://api.hevyapp.com/docs/swagger-ui-init.
 - `GET /v1/user/info` restituisce `data.id` ("The user ID.", nell'esempio ha la forma di un UUID), più nome, unità di misura e `is_pro`.
 - Hevy chiede di non chiamare l'API "exactly at xx:00" per le sincronizzazioni periodiche.
 
-**Non documentato** (quindi ipotesi da verificare sui dati reali di Alessio, con la sua chiave):
-- con quale data si confronta `since` (`updated_at`? `deleted_at`?), e se è inclusivo;
-- per quanto tempo Hevy tiene gli eventi;
-- se `updated_at` cambia a ogni modifica del workout;
-- se l'`id` utente è stabile nel tempo;
+**Non documentato dalla spec.** Per i primi quattro punti Alessio ha dato il 2026-11-06 le indicazioni da usare come base di lavoro; restano da confermare sui suoi dati reali:
+- con quale data si confronta `since`. Alessio: con la data della modifica (quella del giorno in cui il workout è stato modificato o cancellato). Non detto se il confronto è inclusivo;
+- per quanto tempo Hevy tiene gli eventi. Alessio: per ora si assume 10 anni, poi si rivede;
+- se `updated_at` cambia a ogni modifica del workout. Alessio: sì;
+- se l'`id` utente Hevy è stabile nel tempo. Alessio: sì, per ora;
 - se le pagine restano coerenti quando arrivano modifiche durante la lettura. Ipotesi: con l'ordine "dal più recente", un evento nuovo sposta gli altri in avanti e produce al massimo un duplicato, non un buco. Un duplicato non fa danni se il salvataggio è idempotente (aggiorna la riga se esiste).
 
 ## Opzioni
@@ -28,9 +28,9 @@ Fatti dalla spec OpenAPI di Hevy (`https://api.hevyapp.com/docs/swagger-ui-init.
 ### A. Strategia di caricamento
 1. **Primo carico con `/v1/workouts`, poi solo `/v1/workouts/events` da un punto di ripartenza.**
    - Pro: è l'uso dichiarato da Hevy; dopo il primo carico le richieste sono poche.
-   - Contro: dipende da `since` e dalla durata degli eventi, che non sono documentati.
+   - Contro: dipende da `since` e dalla durata degli eventi, che non sono documentati (indicazioni di Alessio nel Contesto).
 2. **Solo `/v1/workouts/events`, la prima volta con `since` = 1970.**
-   - Pro: un solo percorso nel codice. Contro: non sappiamo se gli eventi più vecchi ci sono ancora.
+   - Pro: un solo percorso nel codice; con eventi tenuti 10 anni (indicazione di Alessio) coprirebbe tutto lo storico. Contro: non verificato che un workout mai modificato produca un evento `updated`; se non lo fa, mancherebbe dal primo carico.
 3. **Ricarica completa con `/v1/workouts` a ogni sync**, con le cancellazioni ricavate confrontando gli id.
    - Pro: non dipende da `since`. Contro: con N workout servono N/10 richieste a ogni giro (ipotesi: con qualche centinaio di workout sono decine di chiamate).
 
@@ -58,7 +58,7 @@ Raccomandazione di Claude: **1**.
 2. **Costante in `utils.Constants`.**
    - Pro: zero configurazione. Contro: da togliere col multi-utente; un UUID fisso nel codice.
 3. **Id dell'utente Hevy** letto da `/v1/user/info`.
-   - Pro: nessun valore inventato. Contro: lega il nostro modello a Hevy (stesso motivo per cui l'ADR 0005 non ha scelto l'opzione TEXT); stabilità dell'id non documentata; una chiamata in più.
+   - Pro: nessun valore inventato. Contro: lega il nostro modello a Hevy (stesso motivo per cui l'ADR 0005 non ha scelto l'opzione TEXT); una chiamata in più. Stabilità dell'id: non documentata, Alessio la dà per buona.
 
 Raccomandazione di Claude: **1**.
 
@@ -73,21 +73,25 @@ Raccomandazione di Claude: **1**.
 Raccomandazione di Claude: **1 e 2 insieme** (all'avvio e poi periodica), senza endpoint.
 
 ### Fuori da questo ADR
-- **Tecnologia del repository** (JDBC con `JdbcClient`, Spring Data JDBC o JPA): ADR separato, da decidere prima di scrivere il codice della sync.
+- **Tecnologia del repository**: decisa da Alessio il 2026-11-06, JPA (ADR 0009).
 - **Righe normalizzate** (esercizi, serie): dopo, quando si definiscono le metriche.
-- **Metrica "recovery"**: i workout non hanno tempi di recupero (verificato sulla spec); va ridefinita o tolta nell'ADR delle metriche.
+- **Metrica "recovery"**: Alessio indica che Hevy ha il tempo di recupero. Nella spec di oggi il workout non ha un campo di recupero; `rest_seconds` c'è solo negli esercizi delle routine (recupero *pianificato*, non quello fatto). Due ipotesi da verificare sul JSON reale, che salviamo intero: (a) l'API restituisce campi non documentati nella spec; (b) il recupero si ricava dalla routine collegata (`routine_id`). Si decide nell'ADR delle metriche.
 
 ## Decisione
-(da compilare da Alessio)
+Deciso da Alessio il 2026-11-06: **le raccomandazioni di Claude**.
+- **A1**: primo carico completo con `/v1/workouts`, poi solo `/v1/workouts/events` dal punto di ripartenza. La ricarica completa (A3) resta possibile come operazione manuale di emergenza.
+- **B1**: tabella `hevy_sync_state` con l'ora di inizio dell'ultima sync riuscita.
+- **C1**: cancellazione logica, colonna `deleted_at` in `hevy_workout_raw`.
+- **D1**: UUID dell'utente da proprietà di configurazione `hevy-insights.user-id`.
+- **E1 + E2**: la sync parte all'avvio dell'app e poi periodicamente da `HevyApiController`, a un minuto non tondo; nessun endpoint REST.
 
 ## Conseguenze
-Valgono se si scelgono le raccomandazioni; con altre scelte cambiano di conseguenza.
 - Migrazione V2: tabella `hevy_sync_state` e colonna `deleted_at` in `hevy_workout_raw`. La V1 non si tocca (ADR 0004).
 - Nuove classi, una per compito (regola 19), nei package dell'ADR 0007:
   - `controller`: in `HevyApiController` il punto d'avvio della sync (all'avvio e periodico), che legge da Hevy e passa i DTO al service;
   - `service`: un service della sync che decide primo carico o eventi, aggiorna il punto di ripartenza solo a sync riuscita;
-  - `repository`: accesso a `hevy_workout_raw` (salvataggio idempotente, cancellazione logica) e a `hevy_sync_state`;
-  - `model`: le righe delle due tabelle (primi model veri del progetto);
+  - `repository`: repository JPA per `hevy_workout_raw` (salvataggio idempotente, cancellazione logica) e per `hevy_sync_state` (ADR 0009);
+  - `model`: le entità JPA delle due tabelle (primi model veri del progetto);
   - `config`: proprietà `hevy-insights.user-id` e intervallo della sync.
 - Test: integrazione con Postgres reale (Testcontainers) e risposte Hevy registrate (`MockRestServiceServer`); nessuna chiamata alla vera API in CI.
 - Prima di dichiarare la sync affidabile: una prova sui dati reali di Alessio per verificare le ipotesi elencate nel Contesto (significato di `since`, durata degli eventi, `updated_at`).
