@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #42). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #44). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -22,6 +22,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | ADR 0008 proposta: design della sync | #31 | CI verde su `main` (run 42270489208); solo documentazione |
 | ADR 0008 accettata (A1 B1 C1 D1 E1+E2), indicazioni di Alessio sui punti non documentati; ADR 0009 accettata (JPA) | #33 | Solo documentazione |
 | Sync con Hevy: JPA, migrazione V2, `HevySyncService`, `HevySyncController` (all'avvio e ogni 6 ore) | #35 | CI verde sulla PR (run 42274015768); 41 test in locale |
+| Primo giro reale della sync registrato in questo file | #43 | Solo documentazione |
 | Lettura di `.env` in locale (`spring.config.import`), mai nei test | #37 | CI verde sulla PR (run 42276168661) |
 | ADR 0010 accettata: GitHub Actions pianificato + Postgres Neon gratuito | #39 | CI verde sulla PR (run 42280114727) |
 | Workflow `Hevy sync` ogni 6 ore (minuto 17 UTC) + modalità "una sync e poi esci" | #41 | CI verde sulla PR (run 42280746164); primo giro reale riuscito (vedi Verificato) |
@@ -45,11 +46,12 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Nessun lavoro in corso. Prossimo passo: ADR delle metriche (definizioni da confermare sui dati reali, recupero).
+- Issue #44, branch `claude/44-adr-code-quality`: ADR 0011 `Proposta` (SonarQube e strumenti di test in CI); conferma di Alessio sulle classi `public` di `controller/hevy` scritta nell'ADR 0007. Solo documentazione.
+- Dopo: ADR delle metriche.
 
 ## Decisioni in attesa di Alessio
+- **ADR 0011 `Proposta` (issue #44): qualità del codice in CI.** A: dove gira SonarQube (raccomandato SonarQube Cloud gratuito, privato fino a 50k righe, Java 25 supportato); B: quali strumenti (raccomandati JaCoCo + PIT mutation testing); C: soglie (raccomandato: prima si misura, poi si fissano). Verificato sulle pagine ufficiali il 2026-11-06; il supporto di PIT a Java 25 non è dichiarato, va provato.
 - La sync parte da `HevySyncController` (classe nuova) invece che da `HevyApiController`, per la regola 19: da confermare, oppure si accorpano (ADR 0008, sezione Implementazione).
-- Classi di supporto di `controller/hevy` `public` invece che package-private: Java non permette altro finché `HevyApiController` sta in `controller` (dettagli nell'ADR 0007, esito dell'issue #27). Da confermare, oppure spostare `HevyApiController` in `controller/hevy`.
 
 ## Per il coordinatore
 - Nessuna richiesta.

@@ -71,3 +71,4 @@ In `docs/adr/`, in italiano. La numerazione parte da 0003 perché 0001 e 0002 so
 | [0008](docs/adr/0008-design-della-sync.md) | Design della sync con Hevy | Accettata |
 | [0009](docs/adr/0009-tecnologia-del-repository.md) | Tecnologia del repository: JPA | Accettata |
 | [0010](docs/adr/0010-ambiente-di-esecuzione-gratuito.md) | Ambiente di esecuzione gratuito, attivo a PC spento | Accettata |
+| [0011](docs/adr/0011-qualita-del-codice-in-ci.md) | Qualità del codice in CI: SonarQube e strumenti di test | Proposta |
