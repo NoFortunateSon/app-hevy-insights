@@ -1,6 +1,6 @@
 # 0004 - Migrazioni del database e test di integrazione con Postgres
 
-Stato: Proposta
+Stato: Accettata
 Data: 2026-11-06
 
 ## Contesto
@@ -58,7 +58,10 @@ Fatti verificati il 6/11/2026 (Maven Central, BOM di `spring-boot-dependencies` 
    - Contro: query, migrazioni e mappature JSON non verrebbero mai provate su un Postgres vero; contraddice il CLAUDE.md.
 
 ## Decisione
-(vuota: decide Alessio)
+Deciso da Alessio il 6/11/2026:
+- **Migrazioni: Flyway** (parte 1, opzione 1), alla versione gestita dal BOM di Spring Boot.
+- **Test di integrazione: ibrido** (parte 2, opzione 3). I test usano Testcontainers; il compose condiviso di `platform-infra` serve solo per far girare l'app in locale.
+- Le ipotesi elencate nel Contesto (modulo `flyway-database-postgresql`, Docker sul runner di GitHub) si verificano nella prima PR che introduce il database.
 
 ### Parere di Claude (opinione, non decisione)
 - Parte 1: **Flyway**. Un solo database, schema piccolo, SQL leggibile e licenza Apache 2.0. Userei la versione gestita da Boot (12.4.0) e non la 13.x, per non uscire dal BOM.

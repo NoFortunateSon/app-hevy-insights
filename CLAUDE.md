@@ -41,7 +41,8 @@ Keep modules deep with small interfaces and hide design decisions inside them. D
 ## Testing
 - Contract tests for `hevyclient` against recorded responses. No call to the real Hevy API in CI.
 - Metric tests with invented data.
-- Integration tests with a real Postgres (Testcontainers or the compose service); decide and document which in an ADR proposal.
+- Integration tests with a real Postgres via Testcontainers (ADR 0004). The shared compose from `platform-infra` is only for running the app locally, never for tests.
+- Schema migrations with Flyway at the version managed by the Spring Boot BOM (ADR 0004). Never edit a migration that has already been applied: add a new one.
 
 ## Open points (do not decide alone)
 - How Claude is integrated (MCP server, Anthropic API, or chat only): a later ADR.
