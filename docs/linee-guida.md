@@ -28,10 +28,12 @@ Regole di progettazione per Claude Code e per chi scrive codice in questo repo. 
 | 16 | **Interfacce non banali: prova due progetti** e scegli quello con interfaccia più semplice. | La prima idea di rado è la migliore. | Interfacce piccole o già decise da un ADR. | Ousterhout, principio 12 | Fatto |
 | 17 | **Un solo modo di fare ogni cosa** (nomi, gestione errori, struttura dei test). Prima di introdurre un nuovo stile, cerca come si fa già nel repo. | Chi legge impara una volta sola. | Quando lo stile esistente è sbagliato: proponi di cambiarlo, non mischiare. | Ousterhout cap. 17 (letto solo il titolo nell'indice) | Opinione |
 | 18 | **Dimensione delle funzioni: regola ibrida.** Interfaccia pubblica piccola e profonda; dentro la classe si estrae un metodo privato solo se il blocco ha un nome naturale e si capisce da solo. Nessun limite di righe. | Funzioni brevi dove il nome documenta, senza frammentare in pezzi che si capiscono solo insieme. | Un blocco che si capisce solo leggendo chi lo chiama: lascialo dov'è. | ADR 0006; Fowler cap. 3 "Long Function"; Ousterhout cap. 9 | Fatto |
+| 19 | **Una classe, un compito.** Se descrivi cosa fa una classe solo con una "e", dividila. Il nome dice il compito. Le classi di supporto di un livello stanno in un sotto-package di quel livello, non pubbliche; il livello espone un punto d'ingresso piccolo. | Una classe con più motivi per cambiare è più fragile e si testa peggio. | Non dividere se i pezzi si capiscono solo insieme (regole 3 e 18): la classe resta una. La soglia di circa 150 righe in `CLAUDE.md` è un segnale mio, non dei libri. | Fowler cap. 3 "Long Function" (spezzare per intenzione); Ousterhout, bandiera "Shallow Module" (da bilanciare); ADR 0007, addendum | Opinione |
 
 ## Checklist per ogni PR
 - Un modulo nasconde una decisione (regole 1-2)? Nessun livello che inoltra (3)?
 - Nomi precisi (6), nessun valore magico (9), nessun dato globale mutabile (7).
+- Una classe, un compito; classi di supporto in un sotto-package, non pubbliche (19).
 - Funzioni: interfaccia pubblica piccola; metodi privati estratti solo con un nome naturale (18, ADR 0006).
 - Nessuna duplicazione (5); commenti solo dove servono (11); niente flessibilità non usata (13).
 - Test presenti e CI letta (15). `docs/STATO.md` aggiornato (vedi `CLAUDE.md`).

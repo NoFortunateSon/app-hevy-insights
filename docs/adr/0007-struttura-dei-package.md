@@ -49,3 +49,11 @@ Scelte di Claude nell'applicare la decisione (da correggere se Alessio non è d'
 - Diverse classi che prima erano visibili solo nel loro package ora sono `public` (costruttore di `HevyApiController`, eccezioni, `RetrySleeper`, `HevyApiProperties.hasKey()`), perché lavorano tra package diversi.
 - Il controllo delle dipendenze è testuale (import e nomi completi), senza librerie nuove. Una libreria dedicata (ArchUnit, Spring Modulith) sarebbe una nuova dipendenza: serve un ADR.
 - Aggiornati `CLAUDE.md` (Architecture, Testing), `README.md`, `docs/linee-guida.md` (regole 2 e 3), `docs/STATO.md`, nota nell'ADR 0003. Gli ADR 0003 e 0005 non si riscrivono: i nomi `hevyclient` e `sync` lì sono storici.
+
+## Aggiunta del 2026-11-06 (una classe, un compito)
+Richiesta da Alessio: il codice deve essere diviso per compiti, non concentrato in poche classi. Oggi `HevyApiController` (218 righe) fa insieme la chiamata HTTP, lo scorrimento delle pagine, la gestione del 429 e la lettura del JSON.
+- Le classi di supporto di un livello vanno in un sotto-package di quel livello (per ora `controller/hevy`), non pubbliche. Il livello espone un punto d'ingresso piccolo (`HevyApiController`). Le regole di dipendenza e `LayerDependencyTests` valgono anche per i sotto-package.
+- Il JSON di Hevy lo leggerà quindi `HevyResponseMapper` (in `controller/hevy`), non più solo `HevyApiController`: la conoscenza della forma dell'API Hevy resta dentro `controller/hevy`. Header, percorsi e dimensione pagina restano in `utils.Constants`.
+- `RateLimitRetryPolicy` (quando riprovare dopo un 429) va in `utils`: è logica pura, senza dipendenze dagli altri package.
+- Il nome `HevyApiController` non cambia (scelta di Alessio, issue #24).
+- Questa aggiunta vale dopo il merge della PR che la contiene; il lavoro sul codice è l'issue #27.
