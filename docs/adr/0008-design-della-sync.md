@@ -95,3 +95,11 @@ Deciso da Alessio il 2026-11-06: **le raccomandazioni di Claude**.
   - `config`: proprietà `hevy-insights.user-id` e intervallo della sync.
 - Test: integrazione con Postgres reale (Testcontainers) e risposte Hevy registrate (`MockRestServiceServer`); nessuna chiamata alla vera API in CI.
 - Prima di dichiarare la sync affidabile: una prova sui dati reali di Alessio per verificare le ipotesi elencate nel Contesto (significato di `since`, durata degli eventi, `updated_at`).
+
+## Implementazione (issue #34, 2026-11-06)
+- La sync parte da `controller/HevySyncController`, non da `HevyApiController`: per la regola 19 "una classe, un compito" `HevyApiController` resta il punto d'ingresso per leggere da Hevy, e `HevySyncController` avvia la sync (all'avvio dopo `hevy-insights.sync.initial-delay`, poi ogni `hevy-insights.sync.interval`, contato dalla fine del giro precedente: mai allineato a xx:00). Entrambi stanno nel livello controller, quindi il verso dell'ADR 0007 non cambia. Se Alessio preferisce una sola classe, si accorpano.
+- `HevySyncService` applica gli eventi **dal più vecchio al più recente** (Hevy li elenca al contrario), così per un workout con più eventi vince l'ultimo. Una versione più vecchia non sostituisce mai una più recente; un workout cancellato e poi aggiornato torna visibile; la cancellazione di un workout mai salvato non crea righe; senza `deleted_at` si usa l'inizio della sync.
+- Il punto di ripartenza si sposta solo se tutto il blocco è salvato (una transazione); se Hevy risponde con un errore, resta com'era.
+- Senza `HEVY_API_KEY` la sync non parte e lo scrive nel log.
+- I test non possono raggiungere Hevy: la sync periodica è spenta e l'URL di Hevy punta a una porta locale chiusa (`pom.xml`, Surefire).
+- La ricarica manuale di emergenza (A3) non è implementata: si aggiunge quando serve (regola 13).

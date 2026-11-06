@@ -16,6 +16,7 @@ Copia `.env.example` in `.env` (ignorato da Git) e riempi i valori dal gestore d
 | Variabile | Uso |
 |---|---|
 | `HEVY_API_KEY` | Chiave API Hevy. È una password: mai nei log, nei test o in Git. |
+| `HEVY_INSIGHTS_USER_ID` | Facoltativa: UUID dell'unico utente (default in `application.yaml`). |
 | `HEVY_INSIGHTS_DB_PASSWORD` | Password dell'utente `hevy_insights` del Postgres di `platform-infra`. |
 
 L'app parte anche senza `HEVY_API_KEY`: la chiave viene controllata solo quando si chiama Hevy.
@@ -30,12 +31,12 @@ Livelli classici di Spring (ADR 0007): `controller` → `service` → `repositor
 | Package | Cosa contiene | Oggi |
 |---|---|---|
 | (radice) | La classe `main` | `HevyInsightsApplication` |
-| `controller` | Confine HTTP: espone i service (REST in sola lettura) e parla con l'API Hevy | `HevyApiController` (punto d'ingresso API Hevy, sola lettura); in `controller/hevy`: `HevyHttpClient`, `HevyPageWalker`, `HevyResponseMapper` |
-| `service` | Logica di business: sync incrementale, metriche | Vuoto |
-| `repository` | Solo accesso al database | Nessuna classe; tabella `hevy_workout_raw` (migrazione V1) |
+| `controller` | Confine HTTP: espone i service (REST in sola lettura), parla con l'API Hevy, avvia la sync | `HevyApiController` (punto d'ingresso API Hevy, sola lettura; in `controller/hevy`: `HevyHttpClient`, `HevyPageWalker`, `HevyResponseMapper`), `HevySyncController` (sync all'avvio e ogni 6 ore) |
+| `service` | Logica di business: sync incrementale, metriche | `HevySyncService` |
+| `repository` | Solo accesso al database (JPA, ADR 0009) | `HevyWorkoutRawRepository`, `HevySyncStateRepository`; migrazioni V1, V2 |
 | `exception` | Tutte le eccezioni | `HevyApiException`, `HevyRateLimitExceededException` |
-| `config` | Configurazioni | `HevyApiConfiguration`, `HevyApiProperties` |
-| `model`, `model/dto` | Modelli; DTO nella sottocartella | `HevyWorkoutDto`, `HevyWorkoutEventDto` (DTO) |
+| `config` | Configurazioni | `ApplicationConfiguration`, `HevyInsightsProperties`, `HevyApiConfiguration`, `HevyApiProperties`, `HevySyncSchedulingConfiguration` |
+| `model`, `model/dto` | Modelli; DTO nella sottocartella | `HevyWorkoutRaw`, `HevyWorkoutRawId`, `HevySyncState` (entità JPA); `HevyWorkoutDto`, `HevyWorkoutEventDto` (DTO) |
 | `security` | Sicurezza | Vuoto |
 | `utils` | `Constants` e classi che non rientrano altrove | `Constants`, `RetrySleeper`, `RateLimitRetryPolicy` |
 

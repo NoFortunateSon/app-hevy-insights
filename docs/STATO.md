@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-06 (PR per issue #32). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-06 (PR per issue #34). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -30,16 +30,19 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 ## Non verificato / da fare
 - Linee guida (`docs/linee-guida.md`): basate solo su Ousterhout (sommario) e Fowler (cap. 2 e inizio cap. 3). Effective Java e Pragmatic Programmer (epub) non letti; Khorikov solo indice.
 - Limiti di frequenza di Hevy: non documentati (niente 429 né `Retry-After` nella spec). La gestione del 429 nella PR #15 è difensiva, non provata contro Hevy.
-- Nessuna chiamata alla vera API Hevy finora: forma delle risposte verificata solo sulla spec, non su dati reali. Non documentati dalla spec; indicazioni di Alessio del 2026-11-06 usate come base, da confermare sui dati reali: `since` si confronta con la data della modifica; eventi tenuti 10 anni (per ora); `updated_at` cambia a ogni modifica; id utente Hevy stabile (per ora).
+- Nessuna chiamata alla vera API Hevy finora (la sync è pronta ma non è mai stata eseguita sui dati reali): forma delle risposte verificata solo sulla spec, non su dati reali. Non documentati dalla spec; indicazioni di Alessio del 2026-11-06 usate come base, da confermare sui dati reali: `since` si confronta con la data della modifica; eventi tenuti 10 anni (per ora); `updated_at` cambia a ogni modifica; id utente Hevy stabile (per ora).
 - ADR 0001 e 0002 del workspace, citate in `CLAUDE.md`: non presenti nel repo `workspace-docs` (su `origin/main` c'è solo il README, controllato il 2026-11-06).
+- L'app non legge il file `.env`: per avviarla in locale le variabili (`HEVY_API_KEY`, `HEVY_INSIGHTS_DB_PASSWORD`) vanno impostate a mano. Proposte due soluzioni ad Alessio, nessuna scelta.
 - Maven wrapper (`mvnw`) assente.
 - Spring Modulith / Spring AI: versione non ancora fissata nel `pom.xml`.
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
+- Issue #34, branch `claude/34-hevy-sync` (parte dal branch della #33): **sync con Hevy** secondo ADR 0008 e 0009. Starter JPA; migrazione V2 (`hevy_sync_state`, `deleted_at`); entità `HevyWorkoutRaw`, `HevySyncState`; repository JPA; `HevySyncService`; `HevySyncController` (all'avvio dopo 30 s, poi ogni 6 ore). Eventi applicati dal più vecchio; punto di ripartenza spostato solo a sync riuscita. 41 test verdi in locale con `mvn verify` (6 di integrazione sulla sync con Postgres reale e risposte Hevy registrate; verificato che il test sull'ordine degli eventi fallisce se si toglie l'inversione); CI: vedi i check della PR. **Mai eseguita contro la vera API Hevy.**
 - Issue #32, PR #33, branch `claude/32-sync-answers-jpa`: ADR 0008 **accettata** (raccomandazioni: A1 primo carico + eventi, B1 tabella `hevy_sync_state`, C1 cancellazione logica, D1 UUID da configurazione, E1+E2 all'avvio e periodica); nell'ADR 0008 le indicazioni di Alessio sui punti non documentati da Hevy e sul recupero; ADR 0009 accettata (JPA; starter verificati nel BOM di Boot 4.1.2, Hibernate 7.4.13.Final; dipendenze da aggiungere con la sync). Solo documentazione. Nota: la PR #31 era già mergiata quando questo commit è stato pubblicato, da qui la nuova issue.
 
 ## Decisioni in attesa di Alessio
+- La sync parte da `HevySyncController` (classe nuova) invece che da `HevyApiController`, per la regola 19: da confermare, oppure si accorpano (ADR 0008, sezione Implementazione).
 - Classi di supporto di `controller/hevy` `public` invece che package-private: Java non permette altro finché `HevyApiController` sta in `controller` (dettagli nell'ADR 0007, esito dell'issue #27). Da confermare, oppure spostare `HevyApiController` in `controller/hevy`.
 
 ## Per il coordinatore

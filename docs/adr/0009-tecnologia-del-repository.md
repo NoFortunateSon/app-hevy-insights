@@ -21,12 +21,12 @@ Fatti verificati il 2026-11-06 sul BOM di Spring Boot 4.1.2 (`spring-boot-depend
 Deciso da Alessio il 2026-11-06: **opzione 3, JPA**.
 
 ## Conseguenze
-- Dipendenze `spring-boot-starter-data-jpa` (e `spring-boot-starter-data-jpa-test` per i test), senza versione: la gestisce il BOM di Spring Boot. Si aggiungono al `pom.xml` nella PR della sync, insieme alla prima entità, non prima (regola 13: niente dipendenze non usate).
+- Dipendenze `spring-boot-starter-data-jpa` (e `spring-boot-starter-data-jpa-test` per i test), senza versione: la gestisce il BOM di Spring Boot. Si aggiungono al `pom.xml` nella PR della sync, insieme alla prima entità, non prima (regola 13: niente dipendenze non usate). Esito (issue #34): aggiunto solo `spring-boot-starter-data-jpa`; lo starter di test non serve finché i test usano `@SpringBootTest` con Testcontainers.
 - Lo schema resta di Flyway: Hibernate non crea né modifica tabelle (`spring.jpa.hibernate.ddl-auto=validate`, controlla solo che le entità corrispondano allo schema). Ogni cambio di schema resta una migrazione nuova (ADR 0004).
 - Proposta di Claude per la configurazione, da confermare nella PR della sync: `spring.jpa.open-in-view=false`, così le query partono solo da service e repository e non durante la scrittura della risposta HTTP.
 - Dove va il codice (ADR 0007): le entità JPA sono **model** (`model/`, righe delle nostre tabelle); le interfacce Spring Data JPA stanno in `repository/`; i service le usano, i controller no (`LayerDependencyTests`).
 - Regola 8 delle linee guida (preferire `record` e oggetti immutabili): le entità JPA richiedono un costruttore vuoto e campi modificabili. Lo prevede già la regola 8 ("Entità JPA... confinale in un solo punto"): restano in `model`, i DTO restano `record`.
-- Da verificare con un test di integrazione (Testcontainers) nella PR della sync, non verificato oggi:
+- Verificato nella PR della sync (issue #34) con Testcontainers: l'app parte con `ddl-auto=validate` sullo schema di Flyway e i test di integrazione leggono e scrivono le tabelle. Erano da verificare:
   - mappatura della colonna `JSONB` su un campo testo dell'entità;
   - chiave composta (`user_id`, `hevy_workout_id`);
   - `ddl-auto=validate` che passa sullo schema creato da Flyway.

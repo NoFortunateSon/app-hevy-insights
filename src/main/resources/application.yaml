@@ -7,6 +7,20 @@ spring:
     url: jdbc:postgresql://localhost:5432/hevy_insights
     username: hevy_insights
     password: ${HEVY_INSIGHTS_DB_PASSWORD:}
+  jpa:
+    hibernate:
+      # Flyway owns the schema (ADR 0004, 0009): Hibernate only checks that entities match it.
+      ddl-auto: validate
+    # Queries run only inside services and repositories, never while the HTTP response is written (ADR 0009).
+    open-in-view: false
+
+hevy-insights:
+  # The single user's UUID (ADR 0008, D1). The default is for local use; set HEVY_INSIGHTS_USER_ID to change it.
+  user-id: ${HEVY_INSIGHTS_USER_ID:00000000-0000-0000-0000-000000000001}
+  sync:
+    # First run shortly after startup, then every interval after the previous run ends (ADR 0008, E1 + E2).
+    initial-delay: PT30S
+    interval: PT6H
 
 # Hevy public API. The key is a secret: only from the environment, never in this file.
 hevy:
