@@ -88,6 +88,8 @@
                     <systemPropertyVariables>
                         <hevy-insights.sync.scheduled>false</hevy-insights.sync.scheduled>
                         <hevy.api.base-url>http://127.0.0.1:9</hevy.api.base-url>
+                        <!-- Never load the developer's .env (real keys) into tests. -->
+                        <HEVY_INSIGHTS_ENV_FILE>target/no-env-file-in-tests</HEVY_INSIGHTS_ENV_FILE>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

@@ -11,7 +11,7 @@ Stato attuale del progetto: [`docs/STATO.md`](docs/STATO.md). Regole di lavoro p
 - Per la sync: una chiave API Hevy (solo utenti Hevy Pro, da https://hevy.com/settings?developer).
 
 ## Configurazione
-Copia `.env.example` in `.env` (ignorato da Git) e riempi i valori dal gestore di password:
+Copia `.env.example` in `.env` nella cartella del progetto (ignorato da Git) e riempi i valori dal gestore di password. L'app legge `.env` all'avvio se lo trova nella cartella da cui parte (`spring.config.import` in `application.yaml`); le variabili d'ambiente vere hanno la precedenza, quindi in un ambiente di esecuzione basta impostarle lì. I test non leggono mai `.env`.
 
 | Variabile | Uso |
 |---|---|
@@ -23,7 +23,7 @@ L'app parte anche senza `HEVY_API_KEY`: la chiave viene controllata solo quando 
 
 ## Comandi
 - Build e test: `mvn verify` (avvia Postgres 18.6 con Testcontainers; nessuna chiamata alla vera API Hevy).
-- Avvio locale: prima `docker compose up -d --wait` in `platform-infra`, poi `mvn spring-boot:run`. Porta 8080, health su `/actuator/health`.
+- Avvio locale: prima `docker compose up -d --wait` in `platform-infra`, poi `mvn spring-boot:run` dalla cartella del progetto (serve per trovare `.env`). Porta 8080, health su `/actuator/health`. Con `HEVY_API_KEY` impostata, la sync con Hevy parte 30 secondi dopo l'avvio.
 
 ## Struttura
 Livelli classici di Spring (ADR 0007): `controller` → `service` → `repository`, mai al contrario e senza saltare livelli; lo controlla `LayerDependencyTests`.

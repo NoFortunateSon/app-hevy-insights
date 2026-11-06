@@ -1,6 +1,11 @@
 spring:
   application:
     name: app-hevy-insights
+  config:
+    # Local settings from the project's .env (KEY=VALUE, ignored by Git), read only if the file exists.
+    # It is config data: real environment variables and system properties override it.
+    # HEVY_INSIGHTS_ENV_FILE changes the path; the test run points it to a missing file, so tests never read .env.
+    import: optional:file:${HEVY_INSIGHTS_ENV_FILE:.env}[.properties]
   # Local run against the shared Postgres of platform-infra (database and user hevy_insights).
   # Tests do not use this: they get a Testcontainers Postgres via @ServiceConnection.
   datasource:
