@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Package structure (ADR 0007): controller calls service, service calls repository, never the other way
  * and without skipping a layer. {@code model}, {@code exception} and {@code utils} are used by everyone and
- * depend on none of the layers.
+ * depend on none of the layers. The rules cover sub-packages too (e.g. {@code controller/hevy}).
  * <p>
  * Checked on the source text (imports and fully qualified names) so no extra test library is needed.
  */
@@ -25,6 +25,9 @@ class LayerDependencyTests {
     private static final Path MAIN_SOURCES = Path.of("src/main/java", ROOT_PACKAGE.split("\\."));
     private static final Pattern APP_REFERENCE =
             Pattern.compile(Pattern.quote(ROOT_PACKAGE) + "\\.([a-z]+(?:\\.[a-z]+)?)");
+
+    private static final String HEVY_HELPERS_PACKAGE = "controller.hevy";
+    private static final Path HEVY_ENTRY_POINT = Path.of("controller", "HevyApiController.java");
 
     /** Which package may not reference which: {from, forbidden}. Prefix match on the sub-package. */
     private static final List<Rule> FORBIDDEN = List.of(
@@ -49,11 +52,29 @@ class LayerDependencyTests {
         assertThat(violations).isEmpty();
     }
 
+    /**
+     * The helpers in {@code controller/hevy} are public only because Java has no sub-package visibility
+     * (ADR 0007, addendum): outside their package, only {@code HevyApiController} may use them.
+     */
+    @Test
+    void hevyHelpersAreUsedOnlyByHevyApiController() {
+        List<String> outsiders = sourceFiles()
+                .filter(file -> !isWithin(packageOf(file), HEVY_HELPERS_PACKAGE))
+                .filter(file -> !MAIN_SOURCES.relativize(file).equals(HEVY_ENTRY_POINT))
+                .filter(file -> referencedPackages(read(file)).stream()
+                        .anyMatch(pkg -> isWithin(pkg, HEVY_HELPERS_PACKAGE)))
+                .map(file -> MAIN_SOURCES.relativize(file).toString())
+                .toList();
+
+        assertThat(outsiders).isEmpty();
+    }
+
     @Test
     void ruleCatchesAForbiddenReference() {
         assertThat(referencedPackages("import " + ROOT_PACKAGE + ".model.dto.Something;"))
                 .containsExactly("model.dto");
         assertThat(new Rule("utils", "model").forbids("utils", "model.dto")).isTrue();
+        assertThat(new Rule("controller", "repository").forbids("controller.hevy", "repository")).isTrue();
         assertThat(new Rule("controller", "repository").forbids("controller", "repositoryx")).isFalse();
     }
 
@@ -86,6 +107,11 @@ class LayerDependencyTests {
         return matcher.results().map(result -> result.group(1)).distinct().toList();
     }
 
+    /** {@code pkg} is {@code prefix} or one of its sub-packages. */
+    private static boolean isWithin(String pkg, String prefix) {
+        return pkg.equals(prefix) || pkg.startsWith(prefix + ".");
+    }
+
     private static String read(Path file) {
         try {
             return Files.readString(file);
@@ -98,10 +124,6 @@ class LayerDependencyTests {
 
         boolean forbids(String sourcePackage, String referencedPackage) {
             return isWithin(sourcePackage, from) && isWithin(referencedPackage, forbidden);
-        }
-
-        private static boolean isWithin(String pkg, String prefix) {
-            return pkg.equals(prefix) || pkg.startsWith(prefix + ".");
         }
     }
 }

@@ -57,3 +57,8 @@ Richiesta da Alessio: il codice deve essere diviso per compiti, non concentrato 
 - `RateLimitRetryPolicy` (quando riprovare dopo un 429) va in `utils`: è logica pura, senza dipendenze dagli altri package.
 - Il nome `HevyApiController` non cambia (scelta di Alessio, issue #24).
 - Questa aggiunta vale dopo il merge della PR che la contiene; il lavoro sul codice è l'issue #27.
+
+### Esito dell'issue #27 (2026-11-06)
+- `HevyApiController` (48 righe) delega a `controller/hevy`: `HevyHttpClient` (chiamata HTTP, controllo dello stato, attese su 429), `HevyPageWalker` (pagine), `HevyResponseMapper` (JSON → DTO). `RateLimitRetryPolicy` sta in `utils`. Nessuna classe supera 110 righe.
+- **Vincolo di Java, non risolto dal testo sopra:** un package figlio non condivide le classi package-private con il padre. `HevyApiController` (in `controller`) non può usare classi package-private di `controller/hevy`. Le tre classi di supporto sono quindi `public`; l'intento ("solo il punto d'ingresso le usa") è garantito da `LayerDependencyTests` (`hevyHelpersAreUsedOnlyByHevyApiController`), non dal compilatore.
+- Alternativa che lo farebbe garantire al compilatore: spostare anche `HevyApiController` in `controller/hevy` e rendere package-private le classi di supporto. Cambia la tabella dell'issue #27: decide Alessio.
