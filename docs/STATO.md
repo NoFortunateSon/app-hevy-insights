@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-07 (PR per issue #52). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-07 (PR per issue #54). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -27,6 +27,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | JaCoCo, PIT (workflow settimanale), SonarQube Cloud in CI | #47 | CI verde su `main` (run 42297385212); prima analisi Sonar riuscita (vedi Verificato) |
 | ADR 0012 (repository pubblico, configurazione GitHub) e 0013 (frontend separato, backend monolitico), template di PR e issue, `CODEOWNERS`, `SECURITY.md`, workflow `Dependency review` | #49 | CI verde su `main` (run 42303108304) |
 | Soglie bloccanti (ADR 0011, addendum): Quality Gate Sonar, JaCoCo 90% righe / 85% rami, PIT 90% e PIT a ogni PR | #51 | CI verde sulla PR (run 42313184635; PIT run 42313184648: 96 mutazioni, 92 scoperte, 96%) |
+| `pit` obbligatorio nel ruleset (con `build`); merge delle PR di Claude a CI verde autorizzato da Alessio | #53 | CI verde sulla PR; ruleset riletto via API |
 | Lettura di `.env` in locale (`spring.config.import`), mai nei test | #37 | CI verde sulla PR (run 42276168661) |
 | ADR 0010 accettata: GitHub Actions pianificato + Postgres Neon gratuito | #39 | CI verde sulla PR (run 42280114727) |
 | Workflow `Hevy sync` ogni 6 ore (minuto 17 UTC) + modalità "una sync e poi esci" | #41 | CI verde sulla PR (run 42280746164); primo giro reale riuscito (vedi Verificato) |
@@ -53,7 +54,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #52, branch `claude/52-required-pit-docs`: documentazione del check `pit` obbligatorio e dell'autorizzazione a unire le PR con CI verde (`CLAUDE.md`, ADR 0012 addendum).
+- Libreria condivisa: ADR 0003 del workspace (`workspace-docs`) accettata il 2026-11-07: repository pubblico multi-modulo con BOM, pubblicato su Maven Central, versioni SemVer dal tag; il codice generico ci entra su proposta anche se lo usa solo questa app. Repository non ancora creato; per Maven Central Alessio deve creare account, token e chiave GPG.
 - Per i prossimi progetti (ADR 0012): repository template privato `NoFortunateSon/template-spring-app` (CI verde, run 42301699357) e script `platform-infra/scripts/configure-github-repo.sh` (PR platform-infra #6 e #8, mergiate; il template fa girare PIT a ogni PR, PR template-spring-app #2). Sui repository privati del piano Free l'auto-merge resta spento.
 - Dopo: ADR delle metriche.
 
