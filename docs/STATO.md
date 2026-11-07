@@ -1,6 +1,6 @@
 # Stato del progetto app-hevy-insights
 
-Ultimo aggiornamento: 2026-11-07 (PR per issue #50). Regola in `CLAUDE.md`, sezione "Status file".
+Ultimo aggiornamento: 2026-11-07 (PR per issue #52). Regola in `CLAUDE.md`, sezione "Status file".
 Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti verificati; le ipotesi sono marcate.
 
 ## Fatto (su `main`)
@@ -26,6 +26,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 | ADR 0011 accettata; conferma delle classi `public` di `controller/hevy` | #45 | CI verde |
 | JaCoCo, PIT (workflow settimanale), SonarQube Cloud in CI | #47 | CI verde su `main` (run 42297385212); prima analisi Sonar riuscita (vedi Verificato) |
 | ADR 0012 (repository pubblico, configurazione GitHub) e 0013 (frontend separato, backend monolitico), template di PR e issue, `CODEOWNERS`, `SECURITY.md`, workflow `Dependency review` | #49 | CI verde su `main` (run 42303108304) |
+| Soglie bloccanti (ADR 0011, addendum): Quality Gate Sonar, JaCoCo 90% righe / 85% rami, PIT 90% e PIT a ogni PR | #51 | CI verde sulla PR (run 42313184635; PIT run 42313184648: 96 mutazioni, 92 scoperte, 96%) |
 | Lettura di `.env` in locale (`spring.config.import`), mai nei test | #37 | CI verde sulla PR (run 42276168661) |
 | ADR 0010 accettata: GitHub Actions pianificato + Postgres Neon gratuito | #39 | CI verde sulla PR (run 42280114727) |
 | Workflow `Hevy sync` ogni 6 ore (minuto 17 UTC) + modalità "una sync e poi esci" | #41 | CI verde sulla PR (run 42280746164); primo giro reale riuscito (vedi Verificato) |
@@ -40,7 +41,7 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Recupero: nel workout reale (letto col connettore Hevy) le serie hanno solo `type`, `weight_kg`, `reps`, `rpe`, nessun campo di recupero; c'è `routine_id`, quindi è ricavabile solo il recupero pianificato della routine. Conferma definitiva sul JSON salvato in Neon: non ancora fatta.
 
 - **SonarQube Cloud, prima analisi su `main`** (2026-11-06, letta via API): Quality Gate superato; 0 bug, 0 vulnerabilità, 0 security hotspot, 0 code smell; copertura 98,4% (righe 98,8%, rami 96,6%); duplicazioni 0%; 967 righe di codice. JaCoCo importato, Java 25 riconosciuto.
-- **Repository pubblico dal 2026-11-06** (ADR 0012), dopo un controllo di sicurezza pulito su cronologia, messaggi, issue, PR e log. Attivi: ruleset `protect-main` (solo PR, job `build` verde, niente force push né cancellazione), secret scanning con push protection, CodeQL (default setup, suite estesa), aggiornamenti di sicurezza Dependabot, segnalazione privata delle vulnerabilità, auto-merge, cancellazione dei branch dopo il merge.
+- **Repository pubblico dal 2026-11-06** (ADR 0012), dopo un controllo di sicurezza pulito su cronologia, messaggi, issue, PR e log. Attivi: ruleset `protect-main` (solo PR, job `build` e `pit` verdi dal 2026-11-07, niente force push né cancellazione), secret scanning con push protection, CodeQL (default setup, suite estesa), aggiornamenti di sicurezza Dependabot, segnalazione privata delle vulnerabilità, auto-merge, cancellazione dei branch dopo il merge.
 
 ## Non verificato / da fare
 - Linee guida (`docs/linee-guida.md`): basate solo su Ousterhout (sommario) e Fowler (cap. 2 e inizio cap. 3). Effective Java e Pragmatic Programmer (epub) non letti; Khorikov solo indice.
@@ -52,8 +53,8 @@ Leggono questo file: Alessio e l'assistente di progetto su claude.ai. Solo fatti
 - Metrica "recovery": Alessio indica che Hevy ha il tempo di recupero. Nella spec il workout non ha campi di recupero; `rest_seconds` c'è solo nelle routine (recupero pianificato). Da verificare sul JSON reale (campi non documentati o routine collegata); si decide nell'ADR delle metriche.
 
 ## In corso
-- Issue #50, branch `claude/50-quality-thresholds`: soglie bloccanti decise da Alessio il 2026-11-07 (ADR 0011, addendum): Quality Gate Sonar bloccante, JaCoCo minimo 90% righe e 85% rami, PIT minimo 90%, PIT anche su ogni PR. CI: vedi i check della PR.
-- Per i prossimi progetti (ADR 0012): repository template privato `NoFortunateSon/template-spring-app` (CI verde, run 42301699357) e script `platform-infra/scripts/configure-github-repo.sh` (PR platform-infra #6, mergiata). Sui repository privati del piano Free l'auto-merge resta spento.
+- Issue #52, branch `claude/52-required-pit-docs`: documentazione del check `pit` obbligatorio e dell'autorizzazione a unire le PR con CI verde (`CLAUDE.md`, ADR 0012 addendum).
+- Per i prossimi progetti (ADR 0012): repository template privato `NoFortunateSon/template-spring-app` (CI verde, run 42301699357) e script `platform-infra/scripts/configure-github-repo.sh` (PR platform-infra #6 e #8, mergiate; il template fa girare PIT a ogni PR, PR template-spring-app #2). Sui repository privati del piano Free l'auto-merge resta spento.
 - Dopo: ADR delle metriche.
 
 ## Decisioni in attesa di Alessio

@@ -33,3 +33,8 @@ Configurazione applicata il 2026-11-06:
 - La regola "mai commit su `main`" ora la fa rispettare GitHub.
 - I minuti delle Actions sui runner standard non hanno più un limite: si può rivalutare PIT a ogni PR (ADR 0011).
 - Per i prossimi progetti: un repository template e uno script che applica questa configurazione (un template copia i file, non le impostazioni).
+
+## Addendum (issue #52, 2026-11-07)
+- Il ruleset `protect-main` richiede ora due job verdi: `build` e `pit` (mutation testing, ADR 0011 addendum). Lo script `platform-infra/scripts/configure-github-repo.sh` accetta `REQUIRED_CHECKS` (default `build pit`; PR platform-infra #8) ed è stato riapplicato a questo repository: riletto via API, i check richiesti sono `build` e `pit`.
+- Il template `template-spring-app` fa girare PIT a ogni PR e salta la dependency review finché il repository è privato (PR template-spring-app #2).
+- Alessio autorizza Claude a unire le proprie PR quando la CI è verde.

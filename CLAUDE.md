@@ -11,7 +11,8 @@ The decision record is `docs/adr/0003-primo-progetto-hevy-insights.md` (written 
 - Everything you say to Alessio in chat: Italian, direct, no filler. Separate facts, opinions and hypotheses. Never invent data: if something is missing, ask.
 
 ## Working rules (non-negotiable)
-- Never commit to `main`. The repository is public and the `protect-main` ruleset enforces it (PR only, CI job `build` green, no force push; ADR 0012). Work only on branches named `claude/<issue>-<topic>` and open a pull request using the PR template.
+- Never commit to `main`. The repository is public and the `protect-main` ruleset enforces it (PR only, CI jobs `build` and `pit` green, no force push; ADR 0012). Work only on branches named `claude/<issue>-<topic>` and open a pull request using the PR template.
+- Alessio authorized Claude (2026-11-07) to merge its own PRs once all checks are green and read. This covers merging, not deciding: ADRs with status `Proposta` still wait for Alessio.
 - A PR is not ready unless the CI is green. Every change comes with tests.
 - Never write secrets, tokens, API keys, personal data or `.env` files to the repo, logs, tests, issues or PR text: the repository, its history and its Actions logs are public. Only `.env.example` with empty placeholders.
 - Non-trivial choices (new library, new dependency, data model change, anything costly to undo) are not yours to decide: write a proposal as a new ADR in `docs/adr/` with status `Proposta` (sections: Contesto, Opzioni, Decisione left empty, Conseguenze) and ask Alessio.
